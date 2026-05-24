@@ -20,7 +20,7 @@ public class User {
         }
 
         if (hashedPassword == null || hashedPassword.isBlank()) {
-            throw new IllegalArgumentException("パスワード名は必須です。");
+            throw new IllegalArgumentException("パスワードは必須です。");
         }
 
         if (createdAt == null) {

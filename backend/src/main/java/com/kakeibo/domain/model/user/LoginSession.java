@@ -12,6 +12,22 @@ public class LoginSession {
     private OffsetDateTime revokedAt;
 
     public LoginSession(SessionId id, UUID userId, OffsetDateTime expiresAt, OffsetDateTime createdAt, OffsetDateTime lastUsedAt, OffsetDateTime revokedAt) {
+        if (id == null) {
+            throw new IllegalArgumentException("セッションIDは必須です。");
+        }
+
+        if (userId == null) {
+            throw new IllegalArgumentException("ユーザーIDは必須です。");
+        }
+
+        if (expiresAt == null) {
+            throw new IllegalArgumentException("有効期限は必須です。");
+        }
+
+        if (createdAt == null) {
+            throw new IllegalArgumentException("作成日時は必須です。");
+        }
+
         this.id = id;
         this.userId = userId;
         this.expiresAt = expiresAt;
