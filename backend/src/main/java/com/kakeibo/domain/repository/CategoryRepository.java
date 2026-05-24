@@ -3,7 +3,8 @@ package com.kakeibo.domain.repository;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.Locale.Category;
+
+import com.kakeibo.domain.model.category.Category;
 
 public interface CategoryRepository {
     Optional<Category> findByIdAndUserId(Long categoryId, UUID userId);

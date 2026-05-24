@@ -45,7 +45,7 @@ public class LoginSession {
     }
 
     public boolean isExpired(OffsetDateTime now) {
-        return expiresAt.isBefore(now);
+        return !expiresAt.isAfter(now); // expiresAt.isBefore(now)とすると、有効期限と現在時刻が一致するときも期限切れではなく、有効としてしまう
     }
 
     public boolean isRevoked() {
