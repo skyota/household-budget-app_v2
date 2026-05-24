@@ -13,6 +13,22 @@ public class Expense {
     private final UUID userId;
 
     public Expense(Long id, String title, Price price, LocalDate expenseDate, Long categoryId, String memo, UUID userId) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException("タイトルは必須です。");
+        }
+
+        if (price == null) {
+            throw new IllegalArgumentException("金額は必須です。");
+        }
+
+        if (expenseDate == null) {
+            throw new IllegalArgumentException("支出日は必須です。");
+        }
+
+        if (userId == null) {
+            throw new IllegalArgumentException("ユーザーIDは必須です。");
+        }
+        
         this.id = id;
         this.title = title;
         this.price = price;
