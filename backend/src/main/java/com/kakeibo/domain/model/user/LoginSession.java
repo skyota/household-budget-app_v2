@@ -1,6 +1,7 @@
 package com.kakeibo.domain.model.user;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 public class LoginSession {
@@ -61,6 +62,7 @@ public class LoginSession {
     }
 
     public boolean isExpired(OffsetDateTime now) {
+        Objects.requireNonNull(now, "現在時刻は必須です。");
         return !expiresAt.isAfter(now); // expiresAt.isBefore(now)とすると、有効期限と現在時刻が一致するときも期限切れではなく、有効としてしまう
     }
 
@@ -69,6 +71,7 @@ public class LoginSession {
     }
 
     public boolean isActive(OffsetDateTime now) {
+        Objects.requireNonNull(now, "現在時刻は必須です。");
         return !isExpired(now) && !isRevoked();
     }
 }
