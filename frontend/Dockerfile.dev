@@ -1,0 +1,6 @@
+FROM node:20-alpine
+WORKDIR /app
+EXPOSE 5173
+# node_modules は docker-compose.yml の anonymous volume で保護される
+# コンテナ起動のたびに npm install を実行し、2回目以降はキャッシュが効く
+CMD ["sh", "-c", "npm install && npm run dev"]
