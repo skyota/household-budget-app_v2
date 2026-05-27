@@ -3,6 +3,8 @@ package com.kakeibo.application.usecase.auth;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kakeibo.application.exception.InvalidSessionException;
+import com.kakeibo.domain.model.user.LoginSession;
 import com.kakeibo.domain.model.user.SessionId;
 import com.kakeibo.domain.repository.LoginSessionRepository;
 
@@ -17,6 +19,13 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
     @Override
     @Transactional
     public void logout(SessionId sessionId) {
+        LoginSession session = loginSessionRepository.findById(sessionId)
+            .orElseThrow(() -> new InvalidSessionException("セッションが存在しません。"));
+
+        if (session.isRevoked()) {
+            return;
+        }
+
         loginSessionRepository.revoke(sessionId);
     }
 }

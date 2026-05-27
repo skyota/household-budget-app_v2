@@ -9,6 +9,10 @@ public record RawPassword(String value) {
         if (value.length() < 8) {
             throw new IllegalArgumentException("パスワードは8文字以上で設定してください。");
         }
+
+        if (value.length() > 128) {
+            throw new IllegalArgumentException("パスワードは128文字以内で設定してください。");
+        }
     }
 
     @Override
