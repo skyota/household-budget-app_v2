@@ -20,7 +20,7 @@ public class AuthenticationSessionUseCaseImpl implements AuthenticationSessionUs
     
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthenticationSessionResult authenticate(SessionId sessionId) {
         // セッションを取得
         LoginSession session = loginSessionRepository.findById(sessionId)
@@ -30,6 +30,10 @@ public class AuthenticationSessionUseCaseImpl implements AuthenticationSessionUs
         if (!session.isActive(OffsetDateTime.now())) {
             throw new InvalidSessionException("セッションが無効または期限切れです。");
         }
+
+        // lastUsedAtを現在時刻に更新して保存
+        session.touch(OffsetDateTime.now());
+        loginSessionRepository.save(session);
 
         // 認証済みユーザーIDを返す
         return new AuthenticationSessionResult(session.getUserId());

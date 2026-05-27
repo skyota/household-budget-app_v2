@@ -74,5 +74,10 @@ public class LoginSession {
         Objects.requireNonNull(now, "現在時刻は必須です。");
         return !isExpired(now) && !isRevoked();
     }
+
+    public void touch(OffsetDateTime now) {
+        Objects.requireNonNull(now, "現在時刻は必須です。");
+        this.lastUsedAt = now;
+    }
 }
 
