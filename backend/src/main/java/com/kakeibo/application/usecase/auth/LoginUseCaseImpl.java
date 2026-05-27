@@ -60,6 +60,6 @@ public class LoginUseCaseImpl implements LoginUseCase {
         loginSessionRepository.save(session);
 
         // セッションIDの文字列値を返す（Cookieに返すため）
-        return new LoginResult(sessionId.value());
+        return new LoginResult(sessionId.value(), user.getId(), user.getUsername());
     }
 }
