@@ -85,7 +85,6 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         // .write("書きたい文字")：Writerに文字列を書き込む → それがHTTPレスポンスのボディになる
         response.getWriter().write("""
             {
-                "error_code":"UNAUTHORIZED",
                 "message":"認証が必要です。"
             }
             """);
