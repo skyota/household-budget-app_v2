@@ -21,9 +21,9 @@ public class AuthenticationSessionUseCaseImpl implements AuthenticationSessionUs
 
     @Override
     @Transactional
-    public AuthenticationSessionResult authenticate(SessionId sessionId) {
+    public AuthenticationSessionResult authenticate(String sessionId) {
         // セッションを取得
-        LoginSession session = loginSessionRepository.findById(sessionId)
+        LoginSession session = loginSessionRepository.findById(new SessionId(sessionId))
             .orElseThrow(() -> new InvalidSessionException("セッションが存在しません。"));
 
         // 有効かチェック（期限切れ・失効済みを両方カバー）

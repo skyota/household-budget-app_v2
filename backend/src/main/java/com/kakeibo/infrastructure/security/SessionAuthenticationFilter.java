@@ -10,7 +10,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.kakeibo.application.exception.InvalidSessionException;
 import com.kakeibo.application.usecase.auth.AuthenticationSessionResult;
 import com.kakeibo.application.usecase.auth.AuthenticationSessionUseCase;
-import com.kakeibo.domain.model.user.SessionId;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -54,7 +53,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            AuthenticationSessionResult result = authenticationSessionUseCase.authenticate(new SessionId(sessionValue));
+            AuthenticationSessionResult result = authenticationSessionUseCase.authenticate(sessionValue);
 
             // ユーザーIDをリクエスト属性にセット → コントローラーで受け取れる
             request.setAttribute("authenticatedUserId", result.userId());
@@ -68,7 +67,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         // getCookie()はリクエストに入っているCookie全部を配列で返す
         if (request.getCookies() == null) return null;
         return Arrays.stream(request.getCookies()) // Cookie[]をStreamに変換
-            .filter(c -> "__Host-session".equals(c.getName())) // 名前が一致するものだけ残す
+            .filter(c -> "session".equals(c.getName())) // 名前が一致するものだけ残す
             .map(Cookie::getValue) // Cookieオブジェクト → 値（文字列）に変換（c -> c.getValue()と同じ意味）
             .findFirst() // 最初の1件をOptional<String>で取得
             .orElse(null); // 見つからなければnullを返す
@@ -86,7 +85,6 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         // .write("書きたい文字")：Writerに文字列を書き込む → それがHTTPレスポンスのボディになる
         response.getWriter().write("""
             {
-                "error_code":"UNAUTHORIZED",
                 "message":"認証が必要です。"
             }
             """);

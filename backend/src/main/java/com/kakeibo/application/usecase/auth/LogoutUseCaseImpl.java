@@ -18,14 +18,14 @@ public class LogoutUseCaseImpl implements LogoutUseCase {
 
     @Override
     @Transactional
-    public void logout(SessionId sessionId) {
-        LoginSession session = loginSessionRepository.findById(sessionId)
+    public void logout(String sessionId) {
+        LoginSession session = loginSessionRepository.findById(new SessionId(sessionId))
             .orElseThrow(() -> new InvalidSessionException("セッションが存在しません。"));
 
         if (session.isRevoked()) {
             return;
         }
 
-        loginSessionRepository.revoke(sessionId);
+        loginSessionRepository.revoke(new SessionId(sessionId));
     }
 }
