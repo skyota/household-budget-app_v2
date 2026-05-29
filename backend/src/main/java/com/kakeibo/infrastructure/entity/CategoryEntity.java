@@ -25,7 +25,7 @@ public class CategoryEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
-    private Long budgetAmount;
+    private long budgetAmount;
     private UUID userId;
 
     public static CategoryEntity fromModel(Category category) {

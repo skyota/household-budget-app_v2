@@ -3,7 +3,6 @@ package com.kakeibo.presentation.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,14 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kakeibo.application.usecase.category.CategoryResult;
 import com.kakeibo.application.usecase.category.CreateCategoryCommand;
-import com.kakeibo.application.usecase.category.CreateCategoryResult;
 import com.kakeibo.application.usecase.category.CreateCategoryUseCase;
 import com.kakeibo.application.usecase.category.DeleteCategoryCommand;
 import com.kakeibo.application.usecase.category.DeleteCategoryUseCase;
 import com.kakeibo.application.usecase.category.ListCategoriesQuery;
 import com.kakeibo.application.usecase.category.ListCategoriesUseCase;
 import com.kakeibo.application.usecase.category.UpdateCategoryCommand;
-import com.kakeibo.application.usecase.category.UpdateCategoryResult;
 import com.kakeibo.application.usecase.category.UpdateCategoryUseCase;
 import com.kakeibo.presentation.dto.CategoryRequest;
 import com.kakeibo.presentation.dto.CategoryResponse;
@@ -50,7 +47,7 @@ public class CategoryController {
         @RequestBody CategoryRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
-        CreateCategoryResult result = createCategoryUseCase.create(
+        CategoryResult result = createCategoryUseCase.create(
             new CreateCategoryCommand(request.name(), request.budgetAmount(), userId)
         );
 
@@ -79,7 +76,7 @@ public class CategoryController {
         @RequestBody CategoryRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
-        UpdateCategoryResult result = updateCategoryUseCase.update(
+        CategoryResult result = updateCategoryUseCase.update(
             new UpdateCategoryCommand(id, request.name(), request.budgetAmount(), userId)
         );
 

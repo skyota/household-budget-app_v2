@@ -19,7 +19,7 @@ public class UpdateCategoryUseCaseImpl implements UpdateCategoryUseCase {
 
     @Override
     @Transactional
-    public UpdateCategoryResult update(UpdateCategoryCommand command) {
+    public CategoryResult update(UpdateCategoryCommand command) {
         Category category = categoryRepository.findByIdAndUserId(command.categoryId(), command.userId())
             .orElseThrow(() -> new CategoryNotFoundException("カテゴリーが見つかりません。"));
 
@@ -36,6 +36,6 @@ public class UpdateCategoryUseCaseImpl implements UpdateCategoryUseCase {
         );
 
         Category saved = categoryRepository.save(updated);
-        return new UpdateCategoryResult(saved.getId(), saved.getName(), saved.getBudgetAmount().value());
+        return new CategoryResult(saved.getId(), saved.getName(), saved.getBudgetAmount().value());
     }
 }

@@ -18,6 +18,8 @@ public class DeleteCategoryUseCaseImpl implements DeleteCategoryUseCase {
     @Override
     @Transactional
     public void delete(DeleteCategoryCommand command) {
+        // findByIdAndUserId で所有者チェックも兼ねる。
+        // 他ユーザーのカテゴリーは存在しないものとして 404 を返す（IDOR対策）
         Category category = categoryRepository.findByIdAndUserId(command.categoryId(), command.userId())
             .orElseThrow(() -> new CategoryNotFoundException("カテゴリーが見つかりません。"));
 

@@ -18,7 +18,7 @@ public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
 
     @Override
     @Transactional
-    public CreateCategoryResult create(CreateCategoryCommand command) {
+    public CategoryResult create(CreateCategoryCommand command) {
         if (categoryRepository.existsByUserIdAndName(command.userId(), command.name())) {
             throw new CategoryNameAlreadyExistsException("このカテゴリー名はすでに使用されています。");
         }
@@ -31,7 +31,7 @@ public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
         );
 
         Category saved = categoryRepository.save(category);
-        return new CreateCategoryResult(
+        return new CategoryResult(
             saved.getId(),
             saved.getName(),
             saved.getBudgetAmount().value()
