@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.kakeibo.application.exception.CategoryNameAlreadyExistsException;
+import com.kakeibo.application.exception.CategoryNotFoundException;
 import com.kakeibo.application.exception.InvalidCredentialsException;
 import com.kakeibo.application.exception.InvalidSessionException;
 import com.kakeibo.application.exception.UsernameAlreadyExistsException;
@@ -19,6 +21,12 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(e.getMessage()));
     }
 
+    @ExceptionHandler(CategoryNameAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handle(CategoryNameAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(new ErrorResponse(e.getMessage()));
+    }
+
     // 401 Unauthorized
     @ExceptionHandler({
         InvalidCredentialsException.class,
@@ -27,6 +35,13 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<ErrorResponse> handle(RuntimeException e) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(new ErrorResponse(e.getMessage()));
+    }
+
+    // 404 Not Found
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public  ResponseEntity<ErrorResponse> handle(CategoryNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse(e.getMessage()));
     }
 }

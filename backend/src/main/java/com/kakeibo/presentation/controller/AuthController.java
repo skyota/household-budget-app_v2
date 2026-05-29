@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,9 +27,6 @@ import com.kakeibo.presentation.dto.LoginResponse;
 import com.kakeibo.presentation.dto.LogoutResponse;
 import com.kakeibo.presentation.dto.RegisterRequest;
 import com.kakeibo.presentation.dto.RegisterResponse;
-import com.kakeibo.presentation.exception.UnauthorizedException;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/user")
@@ -96,16 +94,9 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<LoginResponse> me(HttpServletRequest request) {
-        UUID userId = getAuthenticatedUserId(request);
+    public ResponseEntity<LoginResponse> me(
+        @RequestAttribute("authenticatedUserId") UUID userId
+    ) {
         return ResponseEntity.ok(new LoginResponse(userId, null));
-    }
-
-    private UUID getAuthenticatedUserId(HttpServletRequest request) {
-        Object userId = request.getAttribute("authenticatedUserId");
-        if (userId == null) {
-            throw new UnauthorizedException("認証が必要です。");
-        }
-        return (UUID) userId;
     }
 }
