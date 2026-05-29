@@ -27,9 +27,6 @@ import com.kakeibo.presentation.dto.LoginResponse;
 import com.kakeibo.presentation.dto.LogoutResponse;
 import com.kakeibo.presentation.dto.RegisterRequest;
 import com.kakeibo.presentation.dto.RegisterResponse;
-import com.kakeibo.presentation.exception.UnauthorizedException;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/user")
