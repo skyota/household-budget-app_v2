@@ -24,7 +24,7 @@ public class UpdateExpenseUseCaseImpl implements UpdateExpenseUseCase {
     @Transactional
     public UpdateExpenseResult update(UpdateExpenseCommand command) {
         Expense expense = expenseRepository.findByIdAndUserId(command.expenseId(), command.userId())
-        .orElseThrow(() -> new ExpenseNotFoundException("支出が見つかりません。"));
+            .orElseThrow(() -> new ExpenseNotFoundException("支出が見つかりません。"));
         
         if (command.categoryId() != null) {
             categoryRepository.findByIdAndUserId(command.categoryId(), command.userId())

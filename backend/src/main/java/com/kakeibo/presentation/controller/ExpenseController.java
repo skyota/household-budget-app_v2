@@ -74,6 +74,7 @@ public class ExpenseController {
     ) {
         if (page < 1) page = 1;
         if (perPage < 1) perPage = 20;
+        if (perPage > 100) perPage = 100;
 
         ListExpensesResult result = listExpensesUseCase.list(
             new ListExpensesQuery(userId, page, perPage)

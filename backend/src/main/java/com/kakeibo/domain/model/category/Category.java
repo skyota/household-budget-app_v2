@@ -2,6 +2,8 @@ package com.kakeibo.domain.model.category;
 
 import java.util.UUID;
 
+import com.kakeibo.domain.exception.DomainValidationException;
+
 public class Category {
     private final Long id;
     private String name;
@@ -10,15 +12,15 @@ public class Category {
 
     public Category(Long id, String name, BudgetAmount budgetAmount, UUID userId) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("カテゴリー名は必須です。");
+            throw new DomainValidationException("カテゴリー名は必須です。");
         }
 
         if (budgetAmount == null) {
-            throw new IllegalArgumentException("予算額は必須です。");
+            throw new DomainValidationException("予算額は必須です。");
         }
 
         if (userId == null) {
-            throw new IllegalArgumentException("ユーザーIDは必須です。");
+            throw new DomainValidationException("ユーザーIDは必須です。");
         }
 
         this.id = id;

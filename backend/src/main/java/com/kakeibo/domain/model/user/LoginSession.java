@@ -4,6 +4,8 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+import com.kakeibo.domain.exception.DomainValidationException;
+
 public class LoginSession {
     private final SessionId id;
     private final UUID userId;
@@ -14,19 +16,19 @@ public class LoginSession {
 
     public LoginSession(SessionId id, UUID userId, OffsetDateTime expiresAt, OffsetDateTime createdAt, OffsetDateTime lastUsedAt, OffsetDateTime revokedAt) {
         if (id == null) {
-            throw new IllegalArgumentException("セッションIDは必須です。");
+            throw new DomainValidationException("セッションIDは必須です。");
         }
 
         if (userId == null) {
-            throw new IllegalArgumentException("ユーザーIDは必須です。");
+            throw new DomainValidationException("ユーザーIDは必須です。");
         }
 
         if (expiresAt == null) {
-            throw new IllegalArgumentException("有効期限は必須です。");
+            throw new DomainValidationException("有効期限は必須です。");
         }
 
         if (createdAt == null) {
-            throw new IllegalArgumentException("作成日時は必須です。");
+            throw new DomainValidationException("作成日時は必須です。");
         }
 
         this.id = id;
