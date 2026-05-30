@@ -23,5 +23,5 @@ import com.kakeibo.application.usecase.expense.ListExpensesResult;
  */
 
 public interface ExpenseQueryService {
-    ListExpensesResult findByUserId(UUID userId, int page, int perPage);
+    ListExpensesResult findByUserId(UUID userId, Integer year, Integer month, int page, int perPage);
 }

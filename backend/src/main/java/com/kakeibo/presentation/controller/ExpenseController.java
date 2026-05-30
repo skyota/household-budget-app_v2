@@ -69,15 +69,17 @@ public class ExpenseController {
     @GetMapping
     public ResponseEntity<ExpenseListResponse> list(
         @RequestAttribute("authenticatedUserId") UUID userId,
+        @RequestParam(required = false) Integer year,
+        @RequestParam(required = false) Integer month,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "20") int perPage
     ) {
         if (page < 1) page = 1;
         if (perPage < 1) perPage = 20;
-        if (perPage > 100) perPage = 100;
+        if (perPage > 200) perPage = 200;
 
         ListExpensesResult result = listExpensesUseCase.list(
-            new ListExpensesQuery(userId, page, perPage)
+            new ListExpensesQuery(userId, page, perPage, year, month)
         );
 
         return ResponseEntity.ok(new ExpenseListResponse(

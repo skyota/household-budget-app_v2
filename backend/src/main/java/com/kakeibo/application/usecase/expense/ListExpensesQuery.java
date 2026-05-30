@@ -5,5 +5,7 @@ import java.util.UUID;
 public record ListExpensesQuery(
     UUID userId,
     int page,
-    int perPage
+    int perPage,
+    Integer year,
+    Integer month
 ) {}

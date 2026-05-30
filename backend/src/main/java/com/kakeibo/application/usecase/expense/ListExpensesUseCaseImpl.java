@@ -18,6 +18,8 @@ public class ListExpensesUseCaseImpl implements ListExpensesUseCase {
     public ListExpensesResult list(ListExpensesQuery query) {
         return expenseQueryService.findByUserId(
             query.userId(),
+            query.year(),
+            query.month(),
             query.page(),
             query.perPage()
         );
