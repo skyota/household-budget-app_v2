@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.kakeibo.application.exception.CategoryNameAlreadyExistsException;
 import com.kakeibo.application.exception.CategoryNotFoundException;
+import com.kakeibo.application.exception.ExpenseNotFoundException;
 import com.kakeibo.application.exception.InvalidCredentialsException;
 import com.kakeibo.application.exception.InvalidSessionException;
 import com.kakeibo.application.exception.UsernameAlreadyExistsException;
@@ -40,7 +41,13 @@ public class GlobalExceptionHandler {
 
     // 404 Not Found
     @ExceptionHandler(CategoryNotFoundException.class)
-    public  ResponseEntity<ErrorResponse> handle(CategoryNotFoundException e) {
+    public ResponseEntity<ErrorResponse> handle(CategoryNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse(e.getMessage()));
+    }
+
+    @ExceptionHandler(ExpenseNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handle(ExpenseNotFoundException e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(new ErrorResponse(e.getMessage()));
     }
