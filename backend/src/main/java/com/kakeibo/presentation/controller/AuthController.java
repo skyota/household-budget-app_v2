@@ -28,6 +28,8 @@ import com.kakeibo.presentation.dto.LogoutResponse;
 import com.kakeibo.presentation.dto.RegisterRequest;
 import com.kakeibo.presentation.dto.RegisterResponse;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/user")
 public class AuthController {
@@ -42,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest request) {
         RegisterUserResult result = registerUserUseCase.register(
             new RegisterUserCommand(request.username(), request.password())
         );
@@ -52,7 +54,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         LoginResult result = loginUseCase.login(
             new LoginCommand(request.username(), request.password())
         );

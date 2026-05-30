@@ -27,6 +27,8 @@ import com.kakeibo.application.usecase.category.UpdateCategoryUseCase;
 import com.kakeibo.presentation.dto.CategoryRequest;
 import com.kakeibo.presentation.dto.CategoryResponse;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/categories")
 public class CategoryController {
@@ -44,7 +46,7 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<CategoryResponse> create(
-        @RequestBody CategoryRequest request,
+        @Valid @RequestBody CategoryRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         CategoryResult result = createCategoryUseCase.create(
@@ -73,7 +75,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> update(
         @PathVariable Long id,
-        @RequestBody CategoryRequest request,
+        @Valid @RequestBody CategoryRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         CategoryResult result = updateCategoryUseCase.update(

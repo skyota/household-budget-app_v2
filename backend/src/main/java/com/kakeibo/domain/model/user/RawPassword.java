@@ -1,17 +1,19 @@
 package com.kakeibo.domain.model.user;
 
+import com.kakeibo.domain.exception.DomainValidationException;
+
 public record RawPassword(String value) {
     public RawPassword {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("パスワードは必須です。");
+            throw new DomainValidationException("パスワードは必須です。");
         }
     
         if (value.length() < 8) {
-            throw new IllegalArgumentException("パスワードは8文字以上で設定してください。");
+            throw new DomainValidationException("パスワードは8文字以上で設定してください。");
         }
 
         if (value.length() > 128) {
-            throw new IllegalArgumentException("パスワードは128文字以内で設定してください。");
+            throw new DomainValidationException("パスワードは128文字以内で設定してください。");
         }
     }
 
