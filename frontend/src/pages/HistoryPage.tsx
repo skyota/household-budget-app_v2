@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { listExpenses, deleteExpense, updateExpense } from '../api/expenses'
+import { listExpenses, createExpense, deleteExpense, updateExpense } from '../api/expenses'
 import { listCategories } from '../api/categories'
 import MonthSelector from '../components/MonthSelector'
 import ExpenseEditModal from '../components/ExpenseEditModal'
@@ -43,26 +43,39 @@ export default function HistoryPage() {
   const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null)
   const [toast, setToast] = useState<ToastConfig | null>(null)
   const originalExpenseRef = useRef<ExpenseItem | null>(null)
-  function handleDelete(item: ExpenseItem) {
-    // UI から即時除去
+  // F-1: DELETE を即時実行し、Undo は再作成で対応（複数削除の競合を解消）
+  async function handleDelete(item: ExpenseItem) {
     setExpenses((prev) => prev.filter((e) => e.id !== item.id))
+    try {
+      await deleteExpense(item.id)
+    } catch {
+      setExpenses((prev) =>
+        [...prev, item].sort(
+          (a, b) => b.expenseDate.localeCompare(a.expenseDate) || b.id - a.id
+        )
+      )
+      return
+    }
 
     setToast({
       message: '削除しました',
-      onUndo: () => {
-        // 実際の DELETE はまだ呼んでいないので UI に戻すだけ
-        setExpenses((prev) =>
-          [...prev, item].sort(
-            (a, b) => b.expenseDate.localeCompare(a.expenseDate) || b.id - a.id
-          )
-        )
+      onUndo: async () => {
+        try {
+          await createExpense({
+            title: item.title,
+            price: item.price,
+            expenseDate: item.expenseDate,
+            categoryId: item.categoryId,
+            memo: item.memo,
+          })
+          const res = await listExpenses(year, month, 1)
+          setExpenses(res.expenses)
+          setTotalPages(res.totalPages)
+          setCurrentPage(1)
+        } catch { /* ignore */ }
         setToast(null)
       },
-      onDismiss: async () => {
-        // トースト消滅時に初めて DELETE を実行
-        try { await deleteExpense(item.id) } catch { /* ignore */ }
-        setToast(null)
-      },
+      onDismiss: () => setToast(null),
     })
   }
 
@@ -88,8 +101,9 @@ export default function HistoryPage() {
             memo: original.memo,
           })
           setExpenses((prev) => prev.map((e) => (e.id === original.id ? original : e)))
-        } catch { /* ignore */ }
-        setToast(null)
+        } catch { /* ignore */ } finally {
+          setToast(null) // F-5: 失敗時も必ず Toast を閉じる
+        }
       },
       onDismiss: () => setToast(null),
     })
@@ -100,6 +114,7 @@ export default function HistoryPage() {
   }, [])
 
   useEffect(() => {
+    setToast(null) // F-2: 月切り替え時に残存 Toast をクリア
     setExpenses([])
     setCurrentPage(1)
     setLoading(true)

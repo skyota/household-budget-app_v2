@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { listCategories } from '../api/categories'
 import { listExpenses, createExpense, deleteExpense } from '../api/expenses'
 import MonthSelector from '../components/MonthSelector'
@@ -16,6 +16,9 @@ export default function InputPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
+  // F-3: handleUndo のクロージャ問題を避けるため最新値を ref で保持
+  const yearRef = useRef(now.getFullYear())
+  const monthRef = useRef(now.getMonth() + 1)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [chartExpenses, setChartExpenses] = useState<ExpenseItem[]>([])
@@ -43,6 +46,8 @@ export default function InputPage() {
   function handleMonthChange(y: number, m: number) {
     setYear(y)
     setMonth(m)
+    yearRef.current = y
+    monthRef.current = m
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -85,7 +90,8 @@ export default function InputPage() {
     setToastExpenseId(null)
     try {
       await deleteExpense(toastExpenseId)
-      listExpenses(year, month, 1, 200)
+      // F-3: ref で最新の year/month を参照（クロージャの古い値を使わない）
+      listExpenses(yearRef.current, monthRef.current, 1, 200)
         .then((res) => setChartExpenses(res.expenses))
         .catch(() => {})
     } catch {

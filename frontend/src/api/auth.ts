@@ -1,14 +1,11 @@
-import { apiFetch } from './client'
+import { apiFetch, extractErrorMessage } from './client'
 
 export async function login(username: string, password: string): Promise<{ id: string; username: string }> {
   const res = await apiFetch('/user/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
   })
-  if (!res.ok) {
-    const data = await res.json()
-    throw new Error(data.message ?? 'ログインに失敗しました')
-  }
+  if (!res.ok) throw new Error(await extractErrorMessage(res, 'ログインに失敗しました'))
   return res.json()
 }
 
@@ -17,10 +14,7 @@ export async function register(username: string, password: string): Promise<{ id
     method: 'POST',
     body: JSON.stringify({ username, password }),
   })
-  if (!res.ok) {
-    const data = await res.json()
-    throw new Error(data.message ?? '登録に失敗しました')
-  }
+  if (!res.ok) throw new Error(await extractErrorMessage(res, '登録に失敗しました'))
   return res.json()
 }
 

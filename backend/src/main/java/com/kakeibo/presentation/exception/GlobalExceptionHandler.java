@@ -1,5 +1,7 @@
 package com.kakeibo.presentation.exception;
 
+import java.time.DateTimeException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -59,6 +61,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handle(DomainValidationException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(new ErrorResponse(e.getMessage()));
+    }
+
+    // 無効な日付値（month=0 など LocalDate.of() が失敗するケース）
+    @ExceptionHandler(DateTimeException.class)
+    public ResponseEntity<ErrorResponse> handle(DateTimeException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(new ErrorResponse("日付の値が不正です。"));
     }
 
     // JSONのパース失敗・型不一致（例: 数値フィールドに文字列を渡した）

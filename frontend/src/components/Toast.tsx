@@ -9,17 +9,24 @@ interface Props {
 
 export default function Toast({ message, onUndo, onDismiss, duration = 2000 }: Props) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onDismissRef = useRef(onDismiss)
+  const onUndoRef = useRef(onUndo)
 
+  // コールバックの最新参照を保持（タイマーはリセットしない）
+  useEffect(() => { onDismissRef.current = onDismiss }, [onDismiss])
+  useEffect(() => { onUndoRef.current = onUndo }, [onUndo])
+
+  // タイマーはマウント時に1回だけ設定
   useEffect(() => {
-    timerRef.current = setTimeout(onDismiss, duration)
+    timerRef.current = setTimeout(() => onDismissRef.current(), duration)
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [onDismiss, duration])
+  }, [duration])
 
   function handleUndo() {
     if (timerRef.current) clearTimeout(timerRef.current)
-    onUndo()
+    onUndoRef.current()
   }
 
   return (

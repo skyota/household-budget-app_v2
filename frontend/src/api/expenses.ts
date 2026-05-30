@@ -1,4 +1,4 @@
-import { apiFetch } from './client'
+import { apiFetch, extractErrorMessage } from './client'
 import type { ExpenseListResponse } from '../types'
 
 export async function listExpenses(
@@ -29,10 +29,7 @@ export async function createExpense(data: {
     method: 'POST',
     body: JSON.stringify(data),
   })
-  if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.message ?? '支出の登録に失敗しました')
-  }
+  if (!res.ok) throw new Error(await extractErrorMessage(res, '支出の登録に失敗しました'))
   return res.json()
 }
 
@@ -47,10 +44,7 @@ export async function updateExpense(id: number, data: {
     method: 'PUT',
     body: JSON.stringify(data),
   })
-  if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.message ?? '支出の更新に失敗しました')
-  }
+  if (!res.ok) throw new Error(await extractErrorMessage(res, '支出の更新に失敗しました'))
 }
 
 export async function deleteExpense(id: number): Promise<void> {
