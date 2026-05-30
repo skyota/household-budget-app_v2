@@ -20,7 +20,6 @@ import com.kakeibo.application.usecase.expense.CreateExpenseResult;
 import com.kakeibo.application.usecase.expense.CreateExpenseUseCase;
 import com.kakeibo.application.usecase.expense.DeleteExpenseCommand;
 import com.kakeibo.application.usecase.expense.DeleteExpenseUseCase;
-import com.kakeibo.application.usecase.expense.ExpenseItemResult;
 import com.kakeibo.application.usecase.expense.ListExpensesQuery;
 import com.kakeibo.application.usecase.expense.ListExpensesResult;
 import com.kakeibo.application.usecase.expense.ListExpensesUseCase;
@@ -71,6 +70,9 @@ public class ExpenseController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "20") int perPage
     ) {
+        if (page < 1) page = 1;
+        if (perPage < 1 || perPage > 100) perPage = 20;
+
         ListExpensesResult result = listExpensesUseCase.list(
             new ListExpensesQuery(userId, page, perPage)
         );

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.kakeibo.infrastructure.entity.ExpenseEntity;
 
-public interface SpringDateExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
+public interface SpringDataExpenseRepository extends JpaRepository<ExpenseEntity, Long> {
     Optional<ExpenseEntity> findByIdAndUserId(Long id, UUID userId);
     List<ExpenseEntity> findAllByUserId(UUID userId);
 }

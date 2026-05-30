@@ -3,22 +3,31 @@ package com.kakeibo.application.usecase.expense;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kakeibo.application.exception.CategoryNotFoundException;
 import com.kakeibo.application.exception.ExpenseNotFoundException;
 import com.kakeibo.domain.model.expense.Expense;
 import com.kakeibo.domain.model.expense.Price;
+import com.kakeibo.domain.repository.CategoryRepository;
 import com.kakeibo.domain.repository.ExpenseRepository;
 
 @Service
 public class UpdateExpenseUseCaseImpl implements UpdateExpenseUseCase {
     private final ExpenseRepository expenseRepository;
+    private final CategoryRepository categoryRepository;
 
-    public UpdateExpenseUseCaseImpl(ExpenseRepository expenseRepository) {
+    public UpdateExpenseUseCaseImpl(ExpenseRepository expenseRepository, CategoryRepository categoryRepository) {
         this.expenseRepository = expenseRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     @Override
     @Transactional
     public UpdateExpenseResult update(UpdateExpenseCommand command) {
+        if (command.categoryId() != null) {
+            categoryRepository.findByIdAndUserId(command.categoryId(), command.userId())
+                .orElseThrow(() -> new CategoryNotFoundException("カテゴリーが見つかりません。"));
+        }
+
         Expense expense = expenseRepository.findByIdAndUserId(command.expenseId(), command.userId())
             .orElseThrow(() -> new ExpenseNotFoundException("支出が見つかりません。"));
 

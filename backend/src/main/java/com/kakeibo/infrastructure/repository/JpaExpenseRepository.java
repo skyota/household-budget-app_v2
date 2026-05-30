@@ -12,21 +12,21 @@ import com.kakeibo.infrastructure.entity.ExpenseEntity;
 
 @Repository
 public class JpaExpenseRepository implements ExpenseRepository {
-    private final SpringDateExpenseRepository springDateExpenseRepository;
+    private final SpringDataExpenseRepository springDataExpenseRepository;
 
-    public JpaExpenseRepository(SpringDateExpenseRepository springDataCategoryRepository) {
-        this.springDateExpenseRepository = springDataCategoryRepository;
+    public JpaExpenseRepository(SpringDataExpenseRepository springDataExpenseRepository) {
+        this.springDataExpenseRepository = springDataExpenseRepository;
     }
 
     @Override
     public Optional<Expense> findByIdAndUserId(Long expenseId, UUID userId) {
-        return springDateExpenseRepository.findByIdAndUserId(expenseId, userId)
+        return springDataExpenseRepository.findByIdAndUserId(expenseId, userId)
             .map(ExpenseEntity::toModel);
     }
 
     @Override
     public List<Expense> findAllByUserId(UUID userId) {
-        return springDateExpenseRepository.findAllByUserId(userId).stream()
+        return springDataExpenseRepository.findAllByUserId(userId).stream()
             .map(ExpenseEntity::toModel)
             .toList();
     }
@@ -37,11 +37,11 @@ public class JpaExpenseRepository implements ExpenseRepository {
         // ExpenseEntityではstaticメソッドが使われているので、インスタンスを作らなくてもクラス名で直接呼ぶことができる
         // インスタンスを作る：new ExpenseEntity();
 
-        return springDateExpenseRepository.save(entity).toModel();
+        return springDataExpenseRepository.save(entity).toModel();
     }
 
     @Override
     public void delete(Expense expense) {
-        springDateExpenseRepository.deleteById(expense.getId());
+        springDataExpenseRepository.deleteById(expense.getId());
     }
 }
