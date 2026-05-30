@@ -71,3 +71,6 @@ cd backend && gradle wrapper
 # フロントエンド起動
 cd frontend && npm install && npm run dev
 ```
+
+## デザインシステム
+UIを実装するときは必ず @DESIGN.md を参照してスタイルを適用すること
