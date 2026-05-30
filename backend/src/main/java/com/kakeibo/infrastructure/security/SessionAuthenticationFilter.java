@@ -10,6 +10,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.kakeibo.application.exception.InvalidSessionException;
 import com.kakeibo.application.usecase.auth.AuthenticationSessionResult;
 import com.kakeibo.application.usecase.auth.AuthenticationSessionUseCase;
+import com.kakeibo.domain.exception.DomainValidationException;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -58,7 +59,7 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
             // ユーザーIDをリクエスト属性にセット → コントローラーで受け取れる
             request.setAttribute("authenticatedUserId", result.userId());
             filterChain.doFilter(request, response);
-        } catch (InvalidSessionException e) {
+        } catch (InvalidSessionException | DomainValidationException e) {
             sendUnauthorized(response);
         }
     }
