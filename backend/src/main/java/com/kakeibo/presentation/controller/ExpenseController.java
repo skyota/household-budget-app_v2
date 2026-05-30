@@ -31,6 +31,8 @@ import com.kakeibo.presentation.dto.ExpenseListResponse;
 import com.kakeibo.presentation.dto.ExpenseRequest;
 import com.kakeibo.presentation.dto.ExpenseResponse;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/expenses")
 public class ExpenseController {
@@ -48,7 +50,7 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<ExpenseResponse> create(
-        @RequestBody ExpenseRequest request,
+        @Valid @RequestBody ExpenseRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         CreateExpenseResult result = createExpenseUseCase.create(new CreateExpenseCommand(
@@ -71,7 +73,7 @@ public class ExpenseController {
         @RequestParam(defaultValue = "20") int perPage
     ) {
         if (page < 1) page = 1;
-        if (perPage < 1 || perPage > 100) perPage = 20;
+        if (perPage < 1) perPage = 20;
 
         ListExpensesResult result = listExpensesUseCase.list(
             new ListExpensesQuery(userId, page, perPage)
@@ -99,7 +101,7 @@ public class ExpenseController {
     @PutMapping("/{id}")
     public ResponseEntity<ExpenseResponse> update(
         @PathVariable Long id,
-        @RequestBody ExpenseRequest request,
+        @Valid @RequestBody ExpenseRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         UpdateExpenseResult result = updateExpenseUseCase.update(new UpdateExpenseCommand(

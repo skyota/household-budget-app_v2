@@ -23,13 +23,13 @@ public class UpdateExpenseUseCaseImpl implements UpdateExpenseUseCase {
     @Override
     @Transactional
     public UpdateExpenseResult update(UpdateExpenseCommand command) {
+        Expense expense = expenseRepository.findByIdAndUserId(command.expenseId(), command.userId())
+        .orElseThrow(() -> new ExpenseNotFoundException("支出が見つかりません。"));
+        
         if (command.categoryId() != null) {
             categoryRepository.findByIdAndUserId(command.categoryId(), command.userId())
                 .orElseThrow(() -> new CategoryNotFoundException("カテゴリーが見つかりません。"));
         }
-
-        Expense expense = expenseRepository.findByIdAndUserId(command.expenseId(), command.userId())
-            .orElseThrow(() -> new ExpenseNotFoundException("支出が見つかりません。"));
 
         // 同じIDで新しいExpenseを作成
         Expense updated = new Expense(
