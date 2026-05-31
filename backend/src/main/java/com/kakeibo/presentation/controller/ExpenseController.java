@@ -3,6 +3,7 @@ package com.kakeibo.presentation.controller;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
+import com.kakeibo.domain.exception.DomainValidationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -69,15 +70,27 @@ public class ExpenseController {
     @GetMapping
     public ResponseEntity<ExpenseListResponse> list(
         @RequestAttribute("authenticatedUserId") UUID userId,
+        @RequestParam(required = false) Integer year,
+        @RequestParam(required = false) Integer month,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "20") int perPage
     ) {
+        if ((year == null) != (month == null)) {
+            throw new DomainValidationException("yearとmonthは両方指定するか、両方省略してください。");
+        }
+        if (month != null && (month < 1 || month > 12)) {
+            throw new DomainValidationException("monthは1〜12の範囲で指定してください。");
+        }
+        if (year != null && (year < 1900 || year > 9999)) {
+            throw new DomainValidationException("yearは1900〜9999の範囲で指定してください。");
+        }
+
         if (page < 1) page = 1;
         if (perPage < 1) perPage = 20;
-        if (perPage > 100) perPage = 100;
+        if (perPage > 200) perPage = 200; // InputPage のグラフ用に最大 200 件一括取得を許可
 
         ListExpensesResult result = listExpensesUseCase.list(
-            new ListExpensesQuery(userId, page, perPage)
+            new ListExpensesQuery(userId, page, perPage, year, month)
         );
 
         return ResponseEntity.ok(new ExpenseListResponse(

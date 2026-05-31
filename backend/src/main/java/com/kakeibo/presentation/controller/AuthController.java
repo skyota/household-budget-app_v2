@@ -3,6 +3,7 @@ package com.kakeibo.presentation.controller;
 import java.time.Duration;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kakeibo.application.usecase.auth.GetCurrentUserQuery;
+import com.kakeibo.application.usecase.auth.GetCurrentUserResult;
+import com.kakeibo.application.usecase.auth.GetCurrentUserUseCase;
 import com.kakeibo.application.usecase.auth.LoginCommand;
 import com.kakeibo.application.usecase.auth.LoginResult;
 import com.kakeibo.application.usecase.auth.LoginUseCase;
@@ -36,11 +40,21 @@ public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final boolean cookieSecure;
 
-    public AuthController(RegisterUserUseCase registerUserUseCase, LoginUseCase loginUseCase, LogoutUseCase logoutUseCase) {
+    public AuthController(
+        RegisterUserUseCase registerUserUseCase,
+        LoginUseCase loginUseCase,
+        LogoutUseCase logoutUseCase,
+        GetCurrentUserUseCase getCurrentUserUseCase,
+        @Value("${app.cookie.secure:false}") boolean cookieSecure
+    ) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUseCase = loginUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.getCurrentUserUseCase = getCurrentUserUseCase;
+        this.cookieSecure = cookieSecure;
     }
 
     @PostMapping("/register")
@@ -62,11 +76,11 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("session", result.sessionId())
             .path("/")
             .httpOnly(true)
-            .secure(false) // 本番ではtrueに変更
+            .secure(cookieSecure)
             .sameSite("Lax")
             .maxAge(Duration.ofDays(30))
             .build();
-        
+
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
             .body(new LoginResponse(result.userId(), result.username()));
@@ -76,21 +90,19 @@ public class AuthController {
     public ResponseEntity<LogoutResponse> logout(
         @CookieValue(name = "session", required = false) String sessionId
     ) {
-        // sessionIdがあるときは、サーバー側のセッション無効化処理をする
         if (sessionId != null) {
             logoutUseCase.logout(sessionId);
         }
 
-        // ブラウザに削除を指示するためのCookieオブジェクト
         ResponseCookie cookie = ResponseCookie.from("session", "")
             .path("/")
             .httpOnly(true)
-            .secure(false) // 本番ではtrueに変更
+            .secure(cookieSecure)
             .sameSite("Lax")
-            .maxAge(0) // 寿命0で
+            .maxAge(0)
             .build();
-        
-        return  ResponseEntity.ok()
+
+        return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
             .body(new LogoutResponse("ログアウトしました。"));
     }
@@ -99,6 +111,7 @@ public class AuthController {
     public ResponseEntity<LoginResponse> me(
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
-        return ResponseEntity.ok(new LoginResponse(userId, null));
+        GetCurrentUserResult result = getCurrentUserUseCase.get(new GetCurrentUserQuery(userId));
+        return ResponseEntity.ok(new LoginResponse(result.userId(), result.username()));
     }
 }
