@@ -87,7 +87,7 @@ public class ExpenseController {
 
         if (page < 1) page = 1;
         if (perPage < 1) perPage = 20;
-        if (perPage > 200) perPage = 200;
+        if (perPage > 200) perPage = 200; // InputPage のグラフ用に最大 200 件一括取得を許可
 
         ListExpensesResult result = listExpensesUseCase.list(
             new ListExpensesQuery(userId, page, perPage, year, month)

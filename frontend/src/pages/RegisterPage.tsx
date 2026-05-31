@@ -55,6 +55,8 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
+              maxLength={72}
               className="h-11 px-4 rounded-pill border border-hairline bg-canvas text-[17px] text-ink font-sans outline-none focus:border-primary transition-colors"
             />
           </div>

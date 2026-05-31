@@ -19,7 +19,8 @@ export async function register(username: string, password: string): Promise<{ id
 }
 
 export async function logout(): Promise<void> {
-  await apiFetch('/user/logout', { method: 'POST' })
+  const res = await apiFetch('/user/logout', { method: 'POST' })
+  if (!res.ok) throw new Error(await extractErrorMessage(res, 'ログアウトに失敗しました'))
 }
 
 export async function getMe(): Promise<{ id: string; username: string | null }> {

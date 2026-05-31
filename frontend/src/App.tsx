@@ -8,12 +8,29 @@ import HistoryPage from './pages/HistoryPage'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { userId, loading } = useAuth()
+  const { userId, loading, networkError } = useAuth()
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (networkError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-canvas px-5">
+        <div className="text-center">
+          <p className="text-[17px] text-ink mb-4">サーバーに接続できません</p>
+          <p className="text-[14px] text-ink-muted mb-6">接続を確認してページを再読み込みしてください</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="h-11 px-8 rounded-pill bg-primary text-white text-[17px] font-sans active:scale-95 transition-transform"
+          >
+            再読み込み
+          </button>
+        </div>
       </div>
     )
   }

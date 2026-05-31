@@ -29,13 +29,18 @@ function formatDate(dateStr: string): string {
   return `${d.getMonth() + 1}月${d.getDate()}日（${days[d.getDay()]}）`
 }
 
+const now = new Date()
+
 export default function HistoryPage() {
-  const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
+  // F-1: Undo クロージャが古い year/month を参照しないよう ref で最新値を保持
+  const yearRef = useRef(now.getFullYear())
+  const monthRef = useRef(now.getMonth() + 1)
 
   const [categories, setCategories] = useState<Category[]>([])
   const [expenses, setExpenses] = useState<ExpenseItem[]>([])
+  const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -49,9 +54,10 @@ export default function HistoryPage() {
     setToast(config)
     setToastKey((k) => k + 1)
   }
-  // F-1: DELETE を即時実行し、Undo は再作成で対応（複数削除の競合を解消）
+
   async function handleDelete(item: ExpenseItem) {
     setExpenses((prev) => prev.filter((e) => e.id !== item.id))
+    setTotalCount((prev) => prev - 1)
     try {
       await deleteExpense(item.id)
     } catch {
@@ -60,6 +66,7 @@ export default function HistoryPage() {
           (a, b) => b.expenseDate.localeCompare(a.expenseDate) || b.id - a.id
         )
       )
+      setTotalCount((prev) => prev + 1)
       return
     }
 
@@ -74,8 +81,10 @@ export default function HistoryPage() {
             categoryId: item.categoryId,
             memo: item.memo,
           })
-          const res = await listExpenses(year, month, 1)
+          // F-1: ref で最新の year/month を参照
+          const res = await listExpenses(yearRef.current, monthRef.current, 1)
           setExpenses(res.expenses)
+          setTotalCount(res.totalCount)
           setTotalPages(res.totalPages)
           setCurrentPage(1)
         } catch { /* ignore */ }
@@ -120,13 +129,18 @@ export default function HistoryPage() {
   }, [])
 
   useEffect(() => {
-    setToast(null) // F-2: 月切り替え時に残存 Toast をクリア
+    setToast(null)
     setExpenses([])
+    setTotalCount(0)
     setCurrentPage(1)
     setLoading(true)
+    // F-1: ref を月切り替えと同期させる
+    yearRef.current = year
+    monthRef.current = month
     listExpenses(year, month, 1)
       .then((res) => {
         setExpenses(res.expenses)
+        setTotalCount(res.totalCount)
         setTotalPages(res.totalPages)
         setCurrentPage(1)
       })
@@ -135,13 +149,18 @@ export default function HistoryPage() {
   }, [year, month])
 
   async function loadMore() {
+    // F-2: 月切り替え後に古い月のデータが混入しないよう、取得時点の年月をキャプチャして検証
+    const capturedYear = yearRef.current
+    const capturedMonth = monthRef.current
     const nextPage = currentPage + 1
     setLoadingMore(true)
     try {
-      const res = await listExpenses(year, month, nextPage)
-      setExpenses((prev) => [...prev, ...res.expenses])
-      setCurrentPage(nextPage)
-      setTotalPages(res.totalPages)
+      const res = await listExpenses(capturedYear, capturedMonth, nextPage)
+      if (yearRef.current === capturedYear && monthRef.current === capturedMonth) {
+        setExpenses((prev) => [...prev, ...res.expenses])
+        setCurrentPage(nextPage)
+        setTotalPages(res.totalPages)
+      }
     } finally {
       setLoadingMore(false)
     }
@@ -171,7 +190,8 @@ export default function HistoryPage() {
       {!loading && expenses.length > 0 && (
         <>
           <div className="mb-4 flex justify-between items-center">
-            <span className="text-[14px] text-ink-muted">{expenses.length}件</span>
+            {/* F-5: サーバー側の総件数を表示 */}
+            <span className="text-[14px] text-ink-muted">{totalCount}件</span>
             <span className="font-display font-semibold text-[17px] text-ink">
               合計 ¥{totalAmount.toLocaleString()}
             </span>
@@ -195,7 +215,6 @@ export default function HistoryPage() {
                           idx < items.length - 1 ? 'border-b border-hairline' : ''
                         }`}
                       >
-                        {/* バッジ・タイトル・金額・操作ボタン */}
                         <div className="flex items-center gap-2">
                           {(() => {
                             const color = getCategoryColor(item.categoryId, categoryOrderedIds)
@@ -235,7 +254,6 @@ export default function HistoryPage() {
                           </button>
                         </div>
 
-                        {/* メモ（タイトルに揃えて左揃え） */}
                         {item.memo && (
                           <div className="flex gap-2 mt-0.5">
                             <span className="flex-none px-2 py-1 max-w-[72px] invisible select-none" aria-hidden="true">

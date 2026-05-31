@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
             .body(new ErrorResponse(e.getMessage()));
     }
 
-    // 無効な日付値（month=0 など LocalDate.of() が失敗するケース）
+    // ExpenseController で year/month の範囲バリデーション済みのため通常は到達しない安全策
     @ExceptionHandler(DateTimeException.class)
     public ResponseEntity<ErrorResponse> handle(DateTimeException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

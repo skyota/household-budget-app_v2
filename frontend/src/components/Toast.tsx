@@ -16,13 +16,14 @@ export default function Toast({ message, onUndo, onDismiss, duration = 2000 }: P
   useEffect(() => { onDismissRef.current = onDismiss }, [onDismiss])
   useEffect(() => { onUndoRef.current = onUndo }, [onUndo])
 
-  // タイマーはマウント時に1回だけ設定
+  // タイマーはマウント時に1回だけ設定（duration は変化しない前提）
   useEffect(() => {
     timerRef.current = setTimeout(() => onDismissRef.current(), duration)
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
     }
-  }, [duration])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleUndo() {
     if (timerRef.current) clearTimeout(timerRef.current)

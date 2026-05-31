@@ -85,19 +85,19 @@ export default function InputPage() {
 
   const handleToastDismiss = useCallback(() => setToastExpenseId(null), [])
 
-  async function handleUndo() {
+  // F-3: useCallback でメモ化し Toast への参照変更を抑制
+  const handleUndo = useCallback(async () => {
     if (toastExpenseId === null) return
     setToastExpenseId(null)
     try {
       await deleteExpense(toastExpenseId)
-      // F-3: ref で最新の year/month を参照（クロージャの古い値を使わない）
       listExpenses(yearRef.current, monthRef.current, 1, 200)
         .then((res) => setChartExpenses(res.expenses))
         .catch(() => {})
     } catch {
       // 削除失敗は無視
     }
-  }
+  }, [toastExpenseId])
 
   const totalAmount = chartExpenses.reduce((sum, e) => sum + e.price, 0)
 

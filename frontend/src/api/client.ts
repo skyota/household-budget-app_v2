@@ -1,3 +1,14 @@
+export class NetworkError extends Error {
+  constructor() {
+    super('ネットワークエラーが発生しました。接続を確認してください。')
+    this.name = 'NetworkError'
+  }
+}
+
+export function dispatchUnauthorized() {
+  window.dispatchEvent(new CustomEvent('kakeibo:unauthorized'))
+}
+
 export async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
   try {
     return await fetch(path, {
@@ -9,7 +20,7 @@ export async function apiFetch(path: string, options?: RequestInit): Promise<Res
       },
     })
   } catch {
-    throw new Error('ネットワークエラーが発生しました。接続を確認してください。')
+    throw new NetworkError()
   }
 }
 

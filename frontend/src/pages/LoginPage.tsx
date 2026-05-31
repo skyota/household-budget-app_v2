@@ -17,7 +17,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const data = await login(username, password)
-      setUserId(String(data.id))
+      setUserId(data.id)
       navigate('/input')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'ログインに失敗しました')

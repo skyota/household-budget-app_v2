@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kakeibo.application.usecase.auth.GetCurrentUserQuery;
+import com.kakeibo.application.usecase.auth.GetCurrentUserResult;
+import com.kakeibo.application.usecase.auth.GetCurrentUserUseCase;
 import com.kakeibo.application.usecase.auth.LoginCommand;
 import com.kakeibo.application.usecase.auth.LoginResult;
 import com.kakeibo.application.usecase.auth.LoginUseCase;
@@ -23,14 +26,11 @@ import com.kakeibo.application.usecase.auth.LogoutUseCase;
 import com.kakeibo.application.usecase.auth.RegisterUserCommand;
 import com.kakeibo.application.usecase.auth.RegisterUserResult;
 import com.kakeibo.application.usecase.auth.RegisterUserUseCase;
-import com.kakeibo.domain.model.user.User;
-import com.kakeibo.domain.repository.UserRepository;
 import com.kakeibo.presentation.dto.LoginRequest;
 import com.kakeibo.presentation.dto.LoginResponse;
 import com.kakeibo.presentation.dto.LogoutResponse;
 import com.kakeibo.presentation.dto.RegisterRequest;
 import com.kakeibo.presentation.dto.RegisterResponse;
-import com.kakeibo.presentation.exception.UnauthorizedException;
 
 import jakarta.validation.Valid;
 
@@ -40,16 +40,21 @@ public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
-    private final UserRepository userRepository;
+    private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final boolean cookieSecure;
 
-    @Value("${app.cookie.secure:false}")
-    private boolean cookieSecure;
-
-    public AuthController(RegisterUserUseCase registerUserUseCase, LoginUseCase loginUseCase, LogoutUseCase logoutUseCase, UserRepository userRepository) {
+    public AuthController(
+        RegisterUserUseCase registerUserUseCase,
+        LoginUseCase loginUseCase,
+        LogoutUseCase logoutUseCase,
+        GetCurrentUserUseCase getCurrentUserUseCase,
+        @Value("${app.cookie.secure:false}") boolean cookieSecure
+    ) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUseCase = loginUseCase;
         this.logoutUseCase = logoutUseCase;
-        this.userRepository = userRepository;
+        this.getCurrentUserUseCase = getCurrentUserUseCase;
+        this.cookieSecure = cookieSecure;
     }
 
     @PostMapping("/register")
@@ -75,7 +80,7 @@ public class AuthController {
             .sameSite("Lax")
             .maxAge(Duration.ofDays(30))
             .build();
-        
+
         return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
             .body(new LoginResponse(result.userId(), result.username()));
@@ -85,21 +90,19 @@ public class AuthController {
     public ResponseEntity<LogoutResponse> logout(
         @CookieValue(name = "session", required = false) String sessionId
     ) {
-        // sessionIdがあるときは、サーバー側のセッション無効化処理をする
         if (sessionId != null) {
             logoutUseCase.logout(sessionId);
         }
 
-        // ブラウザに削除を指示するためのCookieオブジェクト
         ResponseCookie cookie = ResponseCookie.from("session", "")
             .path("/")
             .httpOnly(true)
             .secure(cookieSecure)
             .sameSite("Lax")
-            .maxAge(0) // 寿命0で
+            .maxAge(0)
             .build();
-        
-        return  ResponseEntity.ok()
+
+        return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, cookie.toString())
             .body(new LogoutResponse("ログアウトしました。"));
     }
@@ -108,8 +111,7 @@ public class AuthController {
     public ResponseEntity<LoginResponse> me(
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new UnauthorizedException("ユーザーが見つかりません。"));
-        return ResponseEntity.ok(new LoginResponse(userId, user.getUsername()));
+        GetCurrentUserResult result = getCurrentUserUseCase.get(new GetCurrentUserQuery(userId));
+        return ResponseEntity.ok(new LoginResponse(result.userId(), result.username()));
     }
 }
