@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*",        "destination": "https://household-budget-app-v2.onrender.com/api/:path*" },
+    { "source": "/user/:path*",       "destination": "https://household-budget-app-v2.onrender.com/user/:path*" },
+    { "source": "/expenses/:path*",   "destination": "https://household-budget-app-v2.onrender.com/expenses/:path*" },
+    { "source": "/categories/:path*", "destination": "https://household-budget-app-v2.onrender.com/categories/:path*" }
+  ]
+}
