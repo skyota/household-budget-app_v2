@@ -1,8 +1,12 @@
 {
   "rewrites": [
+    { "source": "/api",               "destination": "https://household-budget-app-v2.onrender.com/api" },
     { "source": "/api/:path*",        "destination": "https://household-budget-app-v2.onrender.com/api/:path*" },
+    { "source": "/user",              "destination": "https://household-budget-app-v2.onrender.com/user" },
     { "source": "/user/:path*",       "destination": "https://household-budget-app-v2.onrender.com/user/:path*" },
+    { "source": "/expenses",          "destination": "https://household-budget-app-v2.onrender.com/expenses" },
     { "source": "/expenses/:path*",   "destination": "https://household-budget-app-v2.onrender.com/expenses/:path*" },
+    { "source": "/categories",        "destination": "https://household-budget-app-v2.onrender.com/categories" },
     { "source": "/categories/:path*", "destination": "https://household-budget-app-v2.onrender.com/categories/:path*" }
   ]
 }
