@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { getApiToken, regenerateApiToken } from '../api/auth'
 
+const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/b6bf13da7e224db2924ee8911d862a09'
+
 export default function MyPage() {
   const [token, setToken] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -114,16 +116,26 @@ export default function MyPage() {
 
         {/* ショートカット設定方法 */}
         <div className="mt-4 bg-canvas-parchment rounded-lg px-4 py-3">
-          <p className="text-[13px] text-ink-muted font-semibold mb-2">ショートカットの設定方法</p>
-          <ol className="text-[13px] text-ink-muted space-y-1 list-decimal list-inside leading-relaxed">
-            <li>ショートカットアプリ → 新規ショートカット</li>
-            <li>「入力を要求」→ 数字</li>
-            <li>「URLの内容を取得」を追加</li>
-            <li>URL: <span className="font-mono break-all">https://household-budget-app-v2.onrender.com/quick/expense</span></li>
-            <li>方法: POST</li>
-            <li>ヘッダー — Authorization: Bearer &lt;トークン&gt;</li>
-            <li>本文(JSON) — price: 入力した数字</li>
+          <p className="text-[13px] text-ink-muted font-semibold mb-2">ショートカットの使い方</p>
+          <ol className="text-[13px] text-ink-muted space-y-2 list-decimal list-inside leading-relaxed">
+            <li>
+              下のボタンからショートカットを入手する
+            </li>
+            <li>
+              ショートカット内の{' '}
+              <span className="font-mono bg-canvas rounded px-1">&lt;トークン&gt;</span>{' '}
+              と書かれた箇所（2か所）を、上のAPIトークンに書き換える
+            </li>
+            <li>ショートカットを実行してカテゴリ・日付・タイトル・金額を入力する</li>
           </ol>
+          <a
+            href={SHORTCUT_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 flex items-center justify-center w-full h-11 rounded-pill bg-primary text-white text-[17px] font-sans active:scale-95 transition-transform"
+          >
+            ショートカットを入手する
+          </a>
         </div>
       </section>
     </div>
