@@ -26,9 +26,9 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
         this.authenticationSessionUseCase = authenticationSessionUseCase;
     }
 
-    // 認証不要なパス（ログイン・登録）
+    // 認証不要なパス（ログイン・登録・ヘルスチェック）
     private static final Set<String> PUBLIC_PATH = Set.of(
-        "/user/register", "/user/login"
+        "/user/register", "/user/login", "/api/health"
     );
 
     @Override
