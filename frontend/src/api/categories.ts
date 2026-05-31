@@ -3,7 +3,7 @@ import type { Category } from '../types'
 
 export async function listCategories(): Promise<Category[]> {
   const res = await apiFetch('/categories')
-  if (!res.ok) throw new Error('カテゴリの取得に失敗しました')
+  if (!res.ok) throw new Error(await extractErrorMessage(res, 'カテゴリの取得に失敗しました'))
   return res.json()
 }
 

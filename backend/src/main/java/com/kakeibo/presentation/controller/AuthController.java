@@ -3,6 +3,7 @@ package com.kakeibo.presentation.controller;
 import java.time.Duration;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -22,11 +23,14 @@ import com.kakeibo.application.usecase.auth.LogoutUseCase;
 import com.kakeibo.application.usecase.auth.RegisterUserCommand;
 import com.kakeibo.application.usecase.auth.RegisterUserResult;
 import com.kakeibo.application.usecase.auth.RegisterUserUseCase;
+import com.kakeibo.domain.model.user.User;
+import com.kakeibo.domain.repository.UserRepository;
 import com.kakeibo.presentation.dto.LoginRequest;
 import com.kakeibo.presentation.dto.LoginResponse;
 import com.kakeibo.presentation.dto.LogoutResponse;
 import com.kakeibo.presentation.dto.RegisterRequest;
 import com.kakeibo.presentation.dto.RegisterResponse;
+import com.kakeibo.presentation.exception.UnauthorizedException;
 
 import jakarta.validation.Valid;
 
@@ -36,11 +40,16 @@ public class AuthController {
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
+    private final UserRepository userRepository;
 
-    public AuthController(RegisterUserUseCase registerUserUseCase, LoginUseCase loginUseCase, LogoutUseCase logoutUseCase) {
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    public AuthController(RegisterUserUseCase registerUserUseCase, LoginUseCase loginUseCase, LogoutUseCase logoutUseCase, UserRepository userRepository) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUseCase = loginUseCase;
         this.logoutUseCase = logoutUseCase;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/register")
@@ -62,7 +71,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("session", result.sessionId())
             .path("/")
             .httpOnly(true)
-            .secure(false) // 本番ではtrueに変更
+            .secure(cookieSecure)
             .sameSite("Lax")
             .maxAge(Duration.ofDays(30))
             .build();
@@ -85,7 +94,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from("session", "")
             .path("/")
             .httpOnly(true)
-            .secure(false) // 本番ではtrueに変更
+            .secure(cookieSecure)
             .sameSite("Lax")
             .maxAge(0) // 寿命0で
             .build();
@@ -99,6 +108,8 @@ public class AuthController {
     public ResponseEntity<LoginResponse> me(
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
-        return ResponseEntity.ok(new LoginResponse(userId, null));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new UnauthorizedException("ユーザーが見つかりません。"));
+        return ResponseEntity.ok(new LoginResponse(userId, user.getUsername()));
     }
 }

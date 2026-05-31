@@ -42,7 +42,13 @@ export default function HistoryPage() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [editingExpense, setEditingExpense] = useState<ExpenseItem | null>(null)
   const [toast, setToast] = useState<ToastConfig | null>(null)
+  const [toastKey, setToastKey] = useState(0)
   const originalExpenseRef = useRef<ExpenseItem | null>(null)
+
+  function showToast(config: ToastConfig) {
+    setToast(config)
+    setToastKey((k) => k + 1)
+  }
   // F-1: DELETE を即時実行し、Undo は再作成で対応（複数削除の競合を解消）
   async function handleDelete(item: ExpenseItem) {
     setExpenses((prev) => prev.filter((e) => e.id !== item.id))
@@ -57,7 +63,7 @@ export default function HistoryPage() {
       return
     }
 
-    setToast({
+    showToast({
       message: '削除しました',
       onUndo: async () => {
         try {
@@ -89,7 +95,7 @@ export default function HistoryPage() {
     setEditingExpense(null)
 
     const original = originalExpenseRef.current!
-    setToast({
+    showToast({
       message: '更新しました',
       onUndo: async () => {
         try {
@@ -102,7 +108,7 @@ export default function HistoryPage() {
           })
           setExpenses((prev) => prev.map((e) => (e.id === original.id ? original : e)))
         } catch { /* ignore */ } finally {
-          setToast(null) // F-5: 失敗時も必ず Toast を閉じる
+          setToast(null)
         }
       },
       onDismiss: () => setToast(null),
@@ -219,7 +225,7 @@ export default function HistoryPage() {
                             </svg>
                           </button>
                           <button
-                            onClick={() => handleDelete(item)}
+                            onClick={() => void handleDelete(item)}
                             className="flex-none w-8 h-8 flex items-center justify-center rounded-full text-ink-muted hover:bg-red-50 hover:text-red-500 transition-colors"
                             aria-label="削除"
                           >
@@ -270,6 +276,7 @@ export default function HistoryPage() {
 
       {toast && (
         <Toast
+          key={toastKey}
           message={toast.message}
           onUndo={toast.onUndo}
           onDismiss={toast.onDismiss}

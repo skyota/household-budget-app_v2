@@ -14,7 +14,7 @@ export async function listExpenses(
     perPage: String(perPage),
   })
   const res = await apiFetch(`/expenses?${params}`)
-  if (!res.ok) throw new Error('支出の取得に失敗しました')
+  if (!res.ok) throw new Error(await extractErrorMessage(res, '支出の取得に失敗しました'))
   return res.json()
 }
 
@@ -49,5 +49,5 @@ export async function updateExpense(id: number, data: {
 
 export async function deleteExpense(id: number): Promise<void> {
   const res = await apiFetch(`/expenses/${id}`, { method: 'DELETE' })
-  if (!res.ok) throw new Error('削除に失敗しました')
+  if (!res.ok) throw new Error(await extractErrorMessage(res, '削除に失敗しました'))
 }
