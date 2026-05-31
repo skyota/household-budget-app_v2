@@ -1,7 +1,9 @@
 package com.kakeibo.presentation.controller;
 
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -20,7 +22,6 @@ import com.kakeibo.application.usecase.expense.CreateExpenseCommand;
 import com.kakeibo.application.usecase.expense.CreateExpenseResult;
 import com.kakeibo.application.usecase.expense.CreateExpenseUseCase;
 import com.kakeibo.presentation.dto.ExpenseResponse;
-import com.kakeibo.presentation.dto.QuickCategoryResponse;
 import com.kakeibo.presentation.dto.QuickExpenseRequest;
 
 import jakarta.validation.Valid;
@@ -40,14 +41,14 @@ public class QuickExpenseController {
     }
 
     // カテゴリ一覧をShortcutから取得するためのエンドポイント
+    // {"カテゴリ名": id} 形式で返すことでShortcutsのキー一覧からカテゴリ名だけを表示できる
     @GetMapping("/categories")
-    public ResponseEntity<List<QuickCategoryResponse>> listCategories(
+    public ResponseEntity<Map<String, Long>> listCategories(
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         List<CategoryResult> results = listCategoriesUseCase.list(new ListCategoriesQuery(userId));
-        List<QuickCategoryResponse> response = results.stream()
-            .map(c -> new QuickCategoryResponse(c.id(), c.name()))
-            .toList();
+        Map<String, Long> response = new LinkedHashMap<>();
+        results.forEach(c -> response.put(c.name(), c.id()));
         return ResponseEntity.ok(response);
     }
 
