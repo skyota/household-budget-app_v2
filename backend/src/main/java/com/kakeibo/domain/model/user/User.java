@@ -9,14 +9,15 @@ public class User {
     private final UUID id;
     private String username;
     private String hashedPassword;
+    private String apiToken;
     private final OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
-    public User(UUID id, String username, String hashedPassword, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+    public User(UUID id, String username, String hashedPassword, String apiToken, OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         if (id == null) {
             throw new DomainValidationException("IDは必須です。");
         }
-        
+
         if (username == null || username.isBlank()) { // String型は空白のみ（"　"）という意味の値も取れるため
             throw new DomainValidationException("ユーザー名は必須です。");
         }
@@ -32,6 +33,7 @@ public class User {
         this.id = id;
         this.username = username;
         this.hashedPassword = hashedPassword;
+        this.apiToken = apiToken;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -46,6 +48,10 @@ public class User {
 
     public String getHashedPassword() {
         return hashedPassword;
+    }
+
+    public String getApiToken() {
+        return apiToken;
     }
 
     public OffsetDateTime getCreatedAt() {

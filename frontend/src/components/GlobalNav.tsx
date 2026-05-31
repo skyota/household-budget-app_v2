@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import ApiTokenModal from './ApiTokenModal'
 
 interface NavItem {
   path: string
@@ -48,10 +50,13 @@ const CENTER_ITEM: CenterItem = {
 
 export default function GlobalNav() {
   const location = useLocation()
+  const [showTokenModal, setShowTokenModal] = useState(false)
 
   const isActive = (path: string) => location.pathname === path
 
   return (
+    <>
+    {showTokenModal && <ApiTokenModal onClose={() => setShowTokenModal(false)} />}
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 bg-canvas border-t border-hairline">
       <div className="relative flex items-end h-16 px-4">
         {/* 左エリア */}
@@ -88,25 +93,24 @@ export default function GlobalNav() {
           </span>
         </div>
 
-        {/* 右エリア（将来の拡張用） */}
+        {/* 右エリア */}
         <div className="flex-1 flex justify-end">
-          {NAV_ITEMS.filter((item) => item.slot === 'right').map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex flex-col items-center gap-1 pt-2 pb-2 px-3 transition-colors ${
-                isActive(item.path) ? 'text-primary' : 'text-ink-muted'
-              }`}
-            >
-              {item.icon}
-              <span className="text-[11px] font-sans leading-none">{item.label}</span>
-            </Link>
-          ))}
+          <button
+            onClick={() => setShowTokenModal(true)}
+            className="flex flex-col items-center gap-1 pt-2 pb-2 px-3 transition-colors text-ink-muted"
+          >
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+              <circle cx="11" cy="11" r="9" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M11 7v4.5M11 14.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+            <span className="text-[11px] font-sans leading-none">設定</span>
+          </button>
         </div>
       </div>
 
       {/* iOS ホームインジケーター用の余白 */}
       <div className="h-safe-area-inset-bottom" />
     </nav>
+    </>
   )
 }

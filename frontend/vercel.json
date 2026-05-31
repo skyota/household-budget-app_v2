@@ -8,6 +8,7 @@
     { "source": "/expenses/:path*",   "destination": "https://household-budget-app-v2.onrender.com/expenses/:path*" },
     { "source": "/categories",        "destination": "https://household-budget-app-v2.onrender.com/categories" },
     { "source": "/categories/:path*", "destination": "https://household-budget-app-v2.onrender.com/categories/:path*" },
+    { "source": "/quick/:path*",      "destination": "https://household-budget-app-v2.onrender.com/quick/:path*" },
     { "source": "/(.*)",              "destination": "/index.html" }
   ]
 }

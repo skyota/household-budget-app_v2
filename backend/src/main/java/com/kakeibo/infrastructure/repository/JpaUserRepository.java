@@ -36,6 +36,12 @@ public class JpaUserRepository implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByApiToken(String apiToken) {
+        return springDataUserRepository.findByApiToken(apiToken)
+            .map(UserEntity::toModel);
+    }
+
+    @Override
     public boolean existsByUsername(String username) {
         return springDataUserRepository.existsByUsername(username);
     }

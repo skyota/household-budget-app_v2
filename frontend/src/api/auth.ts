@@ -28,3 +28,9 @@ export async function getMe(): Promise<{ id: string; username: string | null }> 
   if (!res.ok) throw new Error('unauthorized')
   return res.json()
 }
+
+export async function getApiToken(): Promise<{ token: string }> {
+  const res = await apiFetch('/user/token')
+  if (!res.ok) throw new Error('トークンの取得に失敗しました')
+  return res.json()
+}

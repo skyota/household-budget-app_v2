@@ -26,6 +26,9 @@ import com.kakeibo.application.usecase.auth.LogoutUseCase;
 import com.kakeibo.application.usecase.auth.RegisterUserCommand;
 import com.kakeibo.application.usecase.auth.RegisterUserResult;
 import com.kakeibo.application.usecase.auth.RegisterUserUseCase;
+import com.kakeibo.domain.model.user.User;
+import com.kakeibo.domain.repository.UserRepository;
+import com.kakeibo.presentation.dto.ApiTokenResponse;
 import com.kakeibo.presentation.dto.LoginRequest;
 import com.kakeibo.presentation.dto.LoginResponse;
 import com.kakeibo.presentation.dto.LogoutResponse;
@@ -41,6 +44,7 @@ public class AuthController {
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final UserRepository userRepository;
     private final boolean cookieSecure;
 
     public AuthController(
@@ -48,12 +52,14 @@ public class AuthController {
         LoginUseCase loginUseCase,
         LogoutUseCase logoutUseCase,
         GetCurrentUserUseCase getCurrentUserUseCase,
+        UserRepository userRepository,
         @Value("${app.cookie.secure:false}") boolean cookieSecure
     ) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUseCase = loginUseCase;
         this.logoutUseCase = logoutUseCase;
         this.getCurrentUserUseCase = getCurrentUserUseCase;
+        this.userRepository = userRepository;
         this.cookieSecure = cookieSecure;
     }
 
@@ -113,5 +119,14 @@ public class AuthController {
     ) {
         GetCurrentUserResult result = getCurrentUserUseCase.get(new GetCurrentUserQuery(userId));
         return ResponseEntity.ok(new LoginResponse(result.userId(), result.username()));
+    }
+
+    @GetMapping("/token")
+    public ResponseEntity<ApiTokenResponse> getToken(
+        @RequestAttribute("authenticatedUserId") UUID userId
+    ) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません。"));
+        return ResponseEntity.ok(new ApiTokenResponse(user.getApiToken()));
     }
 }
