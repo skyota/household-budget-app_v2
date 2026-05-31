@@ -5,6 +5,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import InputPage from './pages/InputPage'
 import HistoryPage from './pages/HistoryPage'
+import MyPage from './pages/MyPage'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -63,6 +64,16 @@ export default function App() {
           <ProtectedRoute>
             <AuthLayout>
               <HistoryPage />
+            </AuthLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/mypage"
+        element={
+          <ProtectedRoute>
+            <AuthLayout>
+              <MyPage />
             </AuthLayout>
           </ProtectedRoute>
         }

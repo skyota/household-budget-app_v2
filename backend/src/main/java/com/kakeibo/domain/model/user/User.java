@@ -65,4 +65,9 @@ public class User {
     public boolean hasSameUsername(String username) {
         return this.username.equals(username);
     }
+
+    // 新しいAPIトークンを持つUserオブジェクトを返す（既存オブジェクトは変更しない）
+    public User withApiToken(String newApiToken) {
+        return new User(this.id, this.username, this.hashedPassword, newApiToken, this.createdAt, this.updatedAt);
+    }
 }
