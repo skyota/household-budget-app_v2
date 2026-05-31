@@ -1,6 +1,8 @@
 package com.kakeibo.application.usecase.auth;
 
+import java.security.SecureRandom;
 import java.time.OffsetDateTime;
+import java.util.HexFormat;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -14,6 +16,8 @@ import com.kakeibo.domain.repository.UserRepository;
 
 @Service
 public class RegisterUserUseCaseImpl implements RegisterUserUseCase {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final UserRepository userRepository;
     private final PasswordHasher passwordHasher;
 
@@ -34,9 +38,14 @@ public class RegisterUserUseCaseImpl implements RegisterUserUseCase {
         RawPassword rawPassword = new RawPassword(command.password());
         String hashedPassword = passwordHasher.hash(rawPassword);
 
+        // 32バイトのランダムなバイト列を生成し16進数文字列に変換（64文字）
+        byte[] tokenBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(tokenBytes);
+        String apiToken = HexFormat.of().formatHex(tokenBytes);
+
         // Userエンティティを生成
         OffsetDateTime now = OffsetDateTime.now();
-        User user = new User(UUID.randomUUID(), command.username(), hashedPassword, now, now);
+        User user = new User(UUID.randomUUID(), command.username(), hashedPassword, apiToken, now, now);
 
         // 保存
         User saved = userRepository.save(user);

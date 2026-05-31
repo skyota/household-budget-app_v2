@@ -32,6 +32,11 @@ public class SessionAuthenticationFilter extends OncePerRequestFilter {
     );
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/quick/");
+    }
+
+    @Override
     protected void doFilterInternal(
         HttpServletRequest request,
         HttpServletResponse response,

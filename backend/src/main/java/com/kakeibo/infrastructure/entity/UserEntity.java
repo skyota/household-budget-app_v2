@@ -23,6 +23,7 @@ public class UserEntity {
     private UUID id;
     private String username;
     private String hashedPassword;
+    private String apiToken;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 
@@ -32,12 +33,13 @@ public class UserEntity {
         entity.setId(user.getId());
         entity.setUsername(user.getUsername());
         entity.setHashedPassword(user.getHashedPassword());
+        entity.setApiToken(user.getApiToken());
         entity.setCreatedAt(user.getCreatedAt());
         entity.setUpdatedAt(user.getUpdatedAt());
         return entity;
     }
 
     public User toModel() {
-        return new User(id, username, hashedPassword, createdAt, updatedAt);
+        return new User(id, username, hashedPassword, apiToken, createdAt, updatedAt);
     }
 }
