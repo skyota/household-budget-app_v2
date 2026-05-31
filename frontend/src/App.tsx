@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage'
 import InputPage from './pages/InputPage'
 import HistoryPage from './pages/HistoryPage'
 import MyPage from './pages/MyPage'
+import LandingPage from './pages/LandingPage'
 import type { ReactNode } from 'react'
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -78,7 +79,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/input" replace />} />
+      <Route path="/" element={<LandingPage />} />
     </Routes>
   )
 }
