@@ -21,6 +21,7 @@ export default defineConfig({
       '/expenses': proxyTarget,
       '/categories': proxyTarget,
       '/api': proxyTarget,
+      '/quick': proxyTarget,
     },
   },
 })

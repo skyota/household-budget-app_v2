@@ -34,3 +34,9 @@ export async function getApiToken(): Promise<{ token: string }> {
   if (!res.ok) throw new Error('トークンの取得に失敗しました')
   return res.json()
 }
+
+export async function regenerateApiToken(): Promise<{ token: string }> {
+  const res = await apiFetch('/user/token/regenerate', { method: 'POST' })
+  if (!res.ok) throw new Error('トークンの再生成に失敗しました')
+  return res.json()
+}

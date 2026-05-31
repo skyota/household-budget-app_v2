@@ -3,6 +3,9 @@ package com.kakeibo.presentation.controller;
 import java.time.Duration;
 import java.util.UUID;
 
+import java.security.SecureRandom;
+import java.util.HexFormat;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -40,6 +43,8 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/user")
 public class AuthController {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
@@ -128,5 +133,21 @@ public class AuthController {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません。"));
         return ResponseEntity.ok(new ApiTokenResponse(user.getApiToken()));
+    }
+
+    @PostMapping("/token/regenerate")
+    public ResponseEntity<ApiTokenResponse> regenerateToken(
+        @RequestAttribute("authenticatedUserId") UUID userId
+    ) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("ユーザーが見つかりません。"));
+
+        // 新しいトークンを生成してDBに保存
+        byte[] tokenBytes = new byte[32];
+        SECURE_RANDOM.nextBytes(tokenBytes);
+        String newToken = HexFormat.of().formatHex(tokenBytes);
+
+        userRepository.save(user.withApiToken(newToken));
+        return ResponseEntity.ok(new ApiTokenResponse(newToken));
     }
 }
