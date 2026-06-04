@@ -9,11 +9,17 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.kakeibo.application.exception.CashBalanceNotFoundException;
 import com.kakeibo.application.exception.CategoryNameAlreadyExistsException;
 import com.kakeibo.application.exception.CategoryNotFoundException;
 import com.kakeibo.application.exception.ExpenseNotFoundException;
+import com.kakeibo.application.exception.FixedExpenseNotFoundException;
+import com.kakeibo.application.exception.IncomeRecordNotFoundException;
+import com.kakeibo.application.exception.IncomeSettingNotFoundException;
 import com.kakeibo.application.exception.InvalidCredentialsException;
 import com.kakeibo.application.exception.InvalidSessionException;
+import com.kakeibo.application.exception.InvestRecordNotFoundException;
+import com.kakeibo.application.exception.InvestSettingNotFoundException;
 import com.kakeibo.application.exception.UsernameAlreadyExistsException;
 import com.kakeibo.domain.exception.DomainValidationException;
 import com.kakeibo.presentation.dto.ErrorResponse;
@@ -90,5 +96,18 @@ public class GlobalExceptionHandler {
         
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(new ErrorResponse(message));
+    }
+
+    @ExceptionHandler({
+        FixedExpenseNotFoundException.class,
+        IncomeSettingNotFoundException.class,
+        IncomeRecordNotFoundException.class,
+        InvestSettingNotFoundException.class,
+        InvestRecordNotFoundException.class,
+        CashBalanceNotFoundException.class
+    })
+    public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new ErrorResponse(e.getMessage()));
     }
 }

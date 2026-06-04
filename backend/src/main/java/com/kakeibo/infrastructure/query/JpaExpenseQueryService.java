@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.kakeibo.application.port.ExpenseQueryService;
 import com.kakeibo.application.usecase.expense.ExpenseItemResult;
 import com.kakeibo.application.usecase.expense.ListExpensesResult;
-import com.kakeibo.application.usecase.expense.PaginationResult;
+import com.kakeibo.application.usecase.shared.PaginationResult;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;

@@ -30,6 +30,26 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    path: '/asset',
+    label: '資産',
+    slot: 'left',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <path
+          d="M11 3a8 8 0 100 16A8 8 0 0011 3z"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+        <path
+          d="M11 11l-3-3M11 11l3-2"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
     path: '/mypage',
     label: 'マイページ',
     slot: 'right',
