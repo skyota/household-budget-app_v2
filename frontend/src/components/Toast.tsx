@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 
 interface Props {
   message: string
-  onUndo: () => void
+  onUndo?: () => void
   onDismiss: () => void
   duration?: number
 }
@@ -27,7 +27,7 @@ export default function Toast({ message, onUndo, onDismiss, duration = 2000 }: P
 
   function handleUndo() {
     if (timerRef.current) clearTimeout(timerRef.current)
-    onUndoRef.current()
+    onUndoRef.current?.()
   }
 
   return (
@@ -43,13 +43,15 @@ export default function Toast({ message, onUndo, onDismiss, duration = 2000 }: P
         }}
       >
         <span className="text-[15px] font-sans">{message}</span>
-        <button
-          onClick={handleUndo}
-          className="text-[15px] font-sans ml-4 flex-none active:opacity-70 transition-opacity"
-          style={{ color: '#2997ff' }}
-        >
-          元に戻す
-        </button>
+        {onUndo && (
+          <button
+            onClick={handleUndo}
+            className="text-[15px] font-sans ml-4 flex-none active:opacity-70 transition-opacity"
+            style={{ color: '#2997ff' }}
+          >
+            元に戻す
+          </button>
+        )}
       </div>
     </div>
   )
