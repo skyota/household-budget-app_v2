@@ -60,7 +60,7 @@ export default function LandingPage() {
             1秒で記録。<br />毎月が見える。
           </h1>
           <p className="text-[17px] md:text-[21px] text-[#6e6e73] leading-[1.19] mb-10">
-            シンプルな家計管理を、毎日の習慣に。
+            記録して、資産を見渡す。シンプルな家計管理を毎日の習慣に。
           </p>
           <div className="flex flex-wrap gap-4 justify-center">
             <Link
@@ -146,6 +146,60 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Feature 04: 資産をひと目で確認 (dark) */}
+      <section className="py-20 px-5" style={{ backgroundColor: '#46464a' }}>
+        <div className="max-w-[980px] mx-auto text-center">
+          <p className="text-[14px] font-semibold text-primary-on-dark tracking-[-0.224px] mb-3">
+            Feature 04
+          </p>
+          <h2 className="font-display text-[28px] md:text-[40px] font-semibold leading-[1.10] text-white mb-4">
+            資産をひと目で。
+          </h2>
+          <p className="text-[17px] md:text-[21px] text-[#cccccc] leading-[1.47] max-w-[540px] mx-auto mb-12">
+            現金残高とNISA元本をグラフで可視化。<br />
+            総資産も支出に応じて自動で計算されます。
+          </p>
+          <PhoneFrame src="/screenshot-asset-overview.png" alt="総資産確認画面" />
+        </div>
+      </section>
+
+      {/* Feature 05: NISA投資推移 (parchment) */}
+      <section className="bg-parchment py-20 px-5">
+        <div className="max-w-[980px] mx-auto text-center">
+          <p className="text-[14px] font-semibold text-primary tracking-[-0.224px] mb-3">
+            Feature 05
+          </p>
+          <h2 className="font-display text-[28px] md:text-[40px] font-semibold leading-[1.10] text-ink mb-4">
+            投資の積み上げを確認
+          </h2>
+          <p className="text-[17px] md:text-[21px] text-[#6e6e73] leading-[1.47] max-w-[540px] mx-auto mb-12">
+            NISA元本の推移をグラフで追える。<br />
+            毎月の投資金額を設定するだけで、<br />
+            資産が自動で更新されます。
+          </p>
+          <PhoneFrame src="/screenshot-investment-trend.png" alt="NISA投資推移画面" />
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="bg-canvas py-16 px-5">
+        <div className="max-w-[640px] mx-auto">
+          <p className="text-[14px] font-semibold text-[#6e6e73] tracking-[-0.224px] mb-8 text-center">
+            よくある質問
+          </p>
+          <div className="border-t border-hairline pt-6">
+            <p className="text-[17px] font-semibold text-ink tracking-[-0.374px] mb-3">
+              なぜNISAの元本しか表示されないの？
+            </p>
+            <p className="text-[15px] text-[#6e6e73] leading-[1.6] tracking-[-0.224px]">
+              NISAは長期投資が前提のため、短期的な損益を日々追う必要はほとんどありません。
+              一方で「どれだけ投資できているか」は、資産形成の進捗を把握する上で大切な指標です。
+              元本を表示することで、着実に積み上がっている投資額を確認できます。
+            </p>
           </div>
         </div>
       </section>
