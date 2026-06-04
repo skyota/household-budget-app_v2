@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import Toast from '../components/Toast'
 import { getApiToken, regenerateApiToken } from '../api/auth'
 import {
   listFixedExpenses, createFixedExpense, deleteFixedExpense,
@@ -6,6 +7,10 @@ import {
 import {
   listIncomeSettings, createIncomeSetting, deleteIncomeSetting,
 } from '../api/incomeSettings'
+import {
+  listIncomeRecords, createIncomeRecord, deleteIncomeRecord,
+} from '../api/incomeRecords'
+import type { IncomeRecord } from '../api/incomeRecords'
 import {
   getInvestSetting, createInvestSetting, updateInvestSetting,
 } from '../api/investSettings'
@@ -31,6 +36,17 @@ function fmt(n: number) {
 }
 
 export default function MyPage() {
+  // ── トースト ──
+  const [toast, setToast] = useState<{ message: string; onUndo: () => void } | null>(null)
+  const [toastKey, setToastKey] = useState(0)
+
+  function showToast(message: string, onUndo: () => void) {
+    setToast({ message, onUndo })
+    setToastKey((k) => k + 1)
+  }
+
+  const dismissToast = useCallback(() => setToast(null), [])
+
   // ── APIトークン ──
   const [token, setToken] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
@@ -85,10 +101,22 @@ export default function MyPage() {
   const [showInvRecForm, setShowInvRecForm] = useState(false)
   const [invRecAmount, setInvRecAmount] = useState('')
   const [invRecDate, setInvRecDate] = useState(todayString())
+  const [invRecType, setInvRecType] = useState<'INITIAL' | 'SPOT'>('INITIAL')
   const [invRecMemo, setInvRecMemo] = useState('')
   const [invRecSubmitting, setInvRecSubmitting] = useState(false)
   const [invRecError, setInvRecError] = useState<string | null>(null)
   const [invRecDeleteId, setInvRecDeleteId] = useState<number | null>(null)
+
+  // ── 臨時収入 ──
+  const [incomeRecords, setIncomeRecords] = useState<IncomeRecord[]>([])
+  const [showIrForm, setShowIrForm] = useState(false)
+  const [irTitle, setIrTitle] = useState('')
+  const [irAmount, setIrAmount] = useState('')
+  const [irDate, setIrDate] = useState(todayString())
+  const [irMemo, setIrMemo] = useState('')
+  const [irSubmitting, setIrSubmitting] = useState(false)
+  const [irError, setIrError] = useState<string | null>(null)
+  const [irDeleteId, setIrDeleteId] = useState<number | null>(null)
 
   useEffect(() => {
     getApiToken().then((r) => setToken(r.token)).catch(() => setTokenError('トークンの取得に失敗しました'))
@@ -96,6 +124,7 @@ export default function MyPage() {
     listFixedExpenses().then((r) => setFixedExpenses(r.data)).catch(() => {})
     listIncomeSettings().then((r) => setIncomeSettings(r.data)).catch(() => {})
     listInvestRecords().then((r) => setInvestRecords(r.data)).catch(() => {})
+    listIncomeRecords().then((r) => setIncomeRecords(r.data)).catch(() => {})
     getInvestSetting()
       .then((s) => { setInvestSetting(s); setInvestSettingExists(true) })
       .catch(() => setInvestSettingExists(false))
@@ -140,11 +169,21 @@ export default function MyPage() {
   }
 
   async function handleBalDelete(id: number) {
+    const item = balances.find((b) => b.id === id)
+    if (!item) return
+    setBalances((prev) => prev.filter((b) => b.id !== id))
+    setBalDeleteId(null)
     try {
       await deleteCashBalance(id)
-      setBalances((prev) => prev.filter((b) => b.id !== id))
-      setBalDeleteId(null)
-    } catch { /* ignore */ }
+      showToast('現金残高を削除しました', async () => {
+        try {
+          const restored = await createCashBalance({ amount: item.amount, balanceDate: item.balanceDate, balanceType: item.balanceType, memo: item.memo })
+          setBalances((prev) => [restored, ...prev])
+        } catch { /* ignore */ } finally { setToast(null) }
+      })
+    } catch {
+      setBalances((prev) => [item, ...prev])
+    }
   }
 
   // ── 固定費 ──
@@ -167,11 +206,21 @@ export default function MyPage() {
   }
 
   async function handleFeDelete(id: number) {
+    const item = fixedExpenses.find((f) => f.id === id)
+    if (!item) return
+    setFixedExpenses((prev) => prev.filter((f) => f.id !== id))
+    setFeDeleteId(null)
     try {
       await deleteFixedExpense(id)
-      setFixedExpenses((prev) => prev.filter((f) => f.id !== id))
-      setFeDeleteId(null)
-    } catch { /* ignore */ }
+      showToast('固定費を削除しました', async () => {
+        try {
+          const restored = await createFixedExpense({ title: item.title, price: item.price, fixedExpenseDate: item.fixedExpenseDate, memo: item.memo })
+          setFixedExpenses((prev) => [...prev, restored].sort((a, b) => a.fixedExpenseDate - b.fixedExpenseDate))
+        } catch { /* ignore */ } finally { setToast(null) }
+      })
+    } catch {
+      setFixedExpenses((prev) => [...prev, item].sort((a, b) => a.fixedExpenseDate - b.fixedExpenseDate))
+    }
   }
 
   // ── 収入設定 ──
@@ -194,11 +243,21 @@ export default function MyPage() {
   }
 
   async function handleIsDelete(id: number) {
+    const item = incomeSettings.find((s) => s.id === id)
+    if (!item) return
+    setIncomeSettings((prev) => prev.filter((s) => s.id !== id))
+    setIsDeleteId(null)
     try {
       await deleteIncomeSetting(id)
-      setIncomeSettings((prev) => prev.filter((s) => s.id !== id))
-      setIsDeleteId(null)
-    } catch { /* ignore */ }
+      showToast('収入設定を削除しました', async () => {
+        try {
+          const restored = await createIncomeSetting({ title: item.title, amount: item.amount, incomeDate: item.incomeDate, memo: item.memo, isAutoGenerate: item.isAutoGenerate })
+          setIncomeSettings((prev) => [...prev, restored])
+        } catch { /* ignore */ } finally { setToast(null) }
+      })
+    } catch {
+      setIncomeSettings((prev) => [...prev, item])
+    }
   }
 
   // ── 投資設定 ──
@@ -229,7 +288,7 @@ export default function MyPage() {
     if (!invRecDate) { setInvRecError('日付を入力してください'); return }
     setInvRecSubmitting(true); setInvRecError(null)
     try {
-      const created = await createInvestRecord({ amount, investDate: invRecDate, investType: 'SPOT', memo: invRecMemo || null })
+      const created = await createInvestRecord({ amount, investDate: invRecDate, investType: invRecType, memo: invRecMemo || null })
       setInvestRecords((prev) => [created, ...prev])
       setShowInvRecForm(false); setInvRecAmount(''); setInvRecMemo('')
     } catch (e: unknown) {
@@ -239,12 +298,58 @@ export default function MyPage() {
     }
   }
 
+  // ── 臨時収入 ──
+  async function handleIrSubmit() {
+    const amount = parseInt(irAmount)
+    if (!irTitle.trim()) { setIrError('タイトルを入力してください'); return }
+    if (isNaN(amount) || amount <= 0) { setIrError('金額を正しく入力してください'); return }
+    if (!irDate) { setIrError('日付を入力してください'); return }
+    setIrSubmitting(true); setIrError(null)
+    try {
+      const created = await createIncomeRecord({ title: irTitle, amount, incomeDate: irDate, memo: irMemo || null, isRegular: false })
+      setIncomeRecords((prev) => [created, ...prev])
+      setShowIrForm(false); setIrTitle(''); setIrAmount(''); setIrMemo('')
+    } catch (e: unknown) {
+      setIrError(e instanceof Error ? e.message : '登録に失敗しました')
+    } finally {
+      setIrSubmitting(false)
+    }
+  }
+
+  async function handleIrDelete(id: number) {
+    const item = incomeRecords.find((r) => r.id === id)
+    if (!item) return
+    setIncomeRecords((prev) => prev.filter((r) => r.id !== id))
+    setIrDeleteId(null)
+    try {
+      await deleteIncomeRecord(id)
+      showToast('臨時収入を削除しました', async () => {
+        try {
+          const restored = await createIncomeRecord({ title: item.title, amount: item.amount, incomeDate: item.incomeDate, memo: item.memo, isRegular: item.isRegular })
+          setIncomeRecords((prev) => [restored, ...prev])
+        } catch { /* ignore */ } finally { setToast(null) }
+      })
+    } catch {
+      setIncomeRecords((prev) => [item, ...prev])
+    }
+  }
+
   async function handleInvRecDelete(id: number) {
+    const item = investRecords.find((r) => r.id === id)
+    if (!item) return
+    setInvestRecords((prev) => prev.filter((r) => r.id !== id))
+    setInvRecDeleteId(null)
     try {
       await deleteInvestRecord(id)
-      setInvestRecords((prev) => prev.filter((r) => r.id !== id))
-      setInvRecDeleteId(null)
-    } catch { /* ignore */ }
+      showToast('投資履歴を削除しました', async () => {
+        try {
+          const restored = await createInvestRecord({ amount: item.amount, investDate: item.investDate, investType: item.investType, memo: item.memo })
+          setInvestRecords((prev) => [restored, ...prev])
+        } catch { /* ignore */ } finally { setToast(null) }
+      })
+    } catch {
+      setInvestRecords((prev) => [item, ...prev])
+    }
   }
 
   const sectionTitle = (title: string) => (
@@ -284,7 +389,7 @@ export default function MyPage() {
         </p>
 
         {showBalanceForm && (
-          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3">
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
             <input className={inputClass} type="number" placeholder="金額（円）" value={balAmount} onChange={(e) => setBalAmount(e.target.value)} />
             <input className={inputClass} type="date" value={balDate} onChange={(e) => setBalDate(e.target.value)} />
             <select className={inputClass} value={balType} onChange={(e) => setBalType(e.target.value as BalanceType)}>
@@ -345,7 +450,7 @@ export default function MyPage() {
         </p>
 
         {showFeForm && (
-          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3">
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
             <input className={inputClass} type="text" placeholder="タイトル（例：家賃）" value={feTitle} onChange={(e) => setFeTitle(e.target.value)} />
             <input className={inputClass} type="number" placeholder="金額（円）" value={fePrice} onChange={(e) => setFePrice(e.target.value)} />
             <input className={inputClass} type="number" placeholder="支払日（1〜31）" value={feDate} onChange={(e) => setFeDate(e.target.value)} />
@@ -403,7 +508,7 @@ export default function MyPage() {
         </p>
 
         {showIsForm && (
-          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3">
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
             <input className={inputClass} type="text" placeholder="タイトル（例：本業の給与）" value={isTitle} onChange={(e) => setIsTitle(e.target.value)} />
             <input className={inputClass} type="number" placeholder="金額（円）" value={isAmount} onChange={(e) => setIsAmount(e.target.value)} />
             <input className={inputClass} type="number" placeholder="給料日（1〜31）" value={isDate} onChange={(e) => setIsDate(e.target.value)} />
@@ -445,6 +550,67 @@ export default function MyPage() {
         )}
       </section>
 
+      {/* ── 臨時収入 ── */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          {sectionTitle('臨時収入')}
+          <button
+            onClick={() => { setShowIrForm(!showIrForm); setIrError(null) }}
+            className="text-[14px] text-primary font-semibold active:opacity-60"
+          >
+            {showIrForm ? '－ 閉じる' : '＋ 追加'}
+          </button>
+        </div>
+        <p className="text-[13px] text-ink-muted mb-3 leading-relaxed">
+          ボーナス・副業収入などの臨時収入を記録します。
+        </p>
+
+        {showIrForm && (
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
+            <input className={inputClass} type="text" placeholder="タイトル（例：ボーナス）" value={irTitle} onChange={(e) => setIrTitle(e.target.value)} />
+            <input className={inputClass} type="number" placeholder="金額（円）" value={irAmount} onChange={(e) => setIrAmount(e.target.value)} />
+            <input className={inputClass} type="date" value={irDate} onChange={(e) => setIrDate(e.target.value)} />
+            <input className={inputClass} type="text" placeholder="メモ（任意）" value={irMemo} onChange={(e) => setIrMemo(e.target.value)} />
+            {irError && <p className="text-[13px] text-red-500">{irError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setShowIrForm(false)} className="flex-1 h-10 rounded-pill border border-hairline text-ink text-[14px] active:scale-95 transition-transform">キャンセル</button>
+              {submitBtn('登録する', irSubmitting, handleIrSubmit)}
+            </div>
+          </div>
+        )}
+
+        {incomeRecords.length === 0 ? (
+          <p className="text-[14px] text-ink-muted text-center py-4">臨時収入がありません</p>
+        ) : (
+          <div className="space-y-2">
+            {incomeRecords.slice(0, 10).map((r) => (
+              <div key={r.id} className="bg-parchment rounded-lg px-4 py-3">
+                {irDeleteId === r.id ? (
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-[13px] text-ink">削除しますか？</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setIrDeleteId(null)} className="text-[13px] text-ink-muted px-3 py-1 rounded-pill border border-hairline">キャンセル</button>
+                      <button onClick={() => handleIrDelete(r.id)} className="text-[13px] text-white bg-red-500 px-3 py-1 rounded-pill">削除</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[17px] text-ink">{r.title}</p>
+                      <p className="text-[12px] text-ink-muted">{r.incomeDate}　{fmt(r.amount)}円{r.memo ? `　${r.memo}` : ''}</p>
+                    </div>
+                    <button onClick={() => setIrDeleteId(r.id)} className="text-[13px] text-ink-muted px-2 py-1">削除</button>
+                  </div>
+                )}
+              </div>
+            ))}
+            {incomeRecords.length > 10 && (
+              <p className="text-[13px] text-ink-muted text-center pt-2">他 {incomeRecords.length - 10} 件</p>
+            )}
+          </div>
+        )}
+      </section>
+
       {/* ── 投資設定 ── */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-3">
@@ -468,7 +634,7 @@ export default function MyPage() {
         </p>
 
         {showInvSetForm && (
-          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3">
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
             <input className={inputClass} type="number" placeholder="毎月の積立額（円）" value={invSetAmount} onChange={(e) => setInvSetAmount(e.target.value)} />
             <input className={inputClass} type="number" placeholder="積立日（1〜31）" value={invSetDate} onChange={(e) => setInvSetDate(e.target.value)} />
             {invSetError && <p className="text-[13px] text-red-500">{invSetError}</p>}
@@ -507,7 +673,11 @@ export default function MyPage() {
         </p>
 
         {showInvRecForm && (
-          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3">
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
+            <select className={inputClass} value={invRecType} onChange={(e) => setInvRecType(e.target.value as 'INITIAL' | 'SPOT')}>
+              <option value="INITIAL">初期元本（アプリ開始前のNISA残高）</option>
+              <option value="SPOT">スポット追加</option>
+            </select>
             <input className={inputClass} type="number" placeholder="投資金額（円）" value={invRecAmount} onChange={(e) => setInvRecAmount(e.target.value)} />
             <input className={inputClass} type="date" value={invRecDate} onChange={(e) => setInvRecDate(e.target.value)} />
             <input className={inputClass} type="text" placeholder="メモ（任意）" value={invRecMemo} onChange={(e) => setInvRecMemo(e.target.value)} />
@@ -617,6 +787,15 @@ export default function MyPage() {
           </a>
         </div>
       </section>
+
+      {toast && (
+        <Toast
+          key={toastKey}
+          message={toast.message}
+          onUndo={toast.onUndo}
+          onDismiss={dismissToast}
+        />
+      )}
     </div>
   )
 }

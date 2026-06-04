@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kakeibo.application.exception.CashBalanceNotFoundException;
 import com.kakeibo.domain.model.cashbalance.CashBalance;
+import com.kakeibo.domain.model.invest.InvestType;
 import com.kakeibo.domain.repository.CashBalanceRepository;
 import com.kakeibo.domain.repository.ExpenseRepository;
 import com.kakeibo.domain.repository.IncomeRecordRepository;
@@ -53,9 +54,10 @@ public class GetAssetSummaryUseCaseImpl implements GetAssetSummaryUseCase {
             .mapToLong(r -> r.getPrice().value())
             .sum();
 
-        // 基準日以降の投資合計（V） 
+        // 基準日以降の投資合計（V）- INITIALはアプリ開始前の既存元本のため除外
         long V = investRecordRepository.findAllByUserId(query.userId()).stream()
             .filter(r -> !r.getInvestDate().isBefore(anchorDate))
+            .filter(r -> r.getInvestType() != InvestType.INITIAL)
             .mapToLong(r -> r.getAmount())
             .sum();
 
