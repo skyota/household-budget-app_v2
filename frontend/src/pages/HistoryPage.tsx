@@ -3,6 +3,7 @@ import { listExpenses, createExpense, deleteExpense, updateExpense } from '../ap
 import { listCategories } from '../api/categories'
 import MonthSelector from '../components/MonthSelector'
 import ExpenseEditModal from '../components/ExpenseEditModal'
+import CategoryGauge from '../components/CategoryGauge'
 import Toast from '../components/Toast'
 import { getCategoryColor } from '../utils/categoryColors'
 import type { Category, ExpenseItem } from '../types'
@@ -39,6 +40,7 @@ export default function HistoryPage() {
   const monthRef = useRef(now.getMonth() + 1)
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [chartExpenses, setChartExpenses] = useState<ExpenseItem[]>([])
   const [expenses, setExpenses] = useState<ExpenseItem[]>([])
   const [totalCount, setTotalCount] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
@@ -146,6 +148,9 @@ export default function HistoryPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
+    listExpenses(year, month, 1, 200)
+      .then((res) => setChartExpenses(res.expenses))
+      .catch(() => {})
   }, [year, month])
 
   async function loadMore() {
@@ -166,6 +171,12 @@ export default function HistoryPage() {
     }
   }
 
+  function spentForCategory(categoryId: number): number {
+    return chartExpenses
+      .filter((e) => e.categoryId === categoryId)
+      .reduce((sum, e) => sum + e.price, 0)
+  }
+
   const categoryOrderedIds = categories.map((c) => c.id)
   const grouped = groupByDate(expenses)
   const sortedDates = Array.from(grouped.keys()).sort((a, b) => b.localeCompare(a))
@@ -179,6 +190,28 @@ export default function HistoryPage() {
         <div className="flex justify-center py-12">
           <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
+      )}
+
+      {/* カテゴリ別予算ゲージ */}
+      {categories.length > 0 && (
+        <section className="mt-4 mb-10 bg-canvas rounded-card border border-hairline p-5">
+          <h2 className="font-display font-semibold text-[17px] tracking-tight text-ink mb-1">
+            {year}年{month}月の支出
+          </h2>
+          <p className="text-[14px] text-ink-muted mb-4">
+            合計: ¥{chartExpenses.reduce((s, e) => s + e.price, 0).toLocaleString()}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {categories.map((cat, i) => (
+              <CategoryGauge
+                key={cat.id}
+                category={cat}
+                spent={spentForCategory(cat.id)}
+                colorIndex={i}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {!loading && expenses.length === 0 && (
