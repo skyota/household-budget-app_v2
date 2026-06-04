@@ -358,7 +358,7 @@ export default function MyPage() {
 
 
 
-  const inputClass = 'w-full h-11 rounded-lg border border-hairline bg-canvas px-3 text-[17px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary'
+  const inputClass = 'w-full max-w-full min-w-0 h-11 rounded-lg border border-hairline bg-canvas px-3 text-[17px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary'
   const submitBtn = (label: string, loading: boolean, onClick: () => void) => (
     <button
       onClick={onClick}
@@ -370,7 +370,7 @@ export default function MyPage() {
   )
 
   return (
-    <div className="px-5 pt-6 pb-32 max-w-lg mx-auto">
+    <div className="px-5 pt-6 pb-32 max-w-lg mx-auto overflow-x-hidden">
       <h1 className="text-[28px] font-semibold text-ink tracking-tight mb-8">マイページ</h1>
 
       {/* ── 現金残高 ── */}
