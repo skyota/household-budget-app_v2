@@ -359,6 +359,7 @@ export default function MyPage() {
 
 
   const inputClass = 'w-full max-w-full min-w-0 h-11 rounded-lg border border-hairline bg-canvas px-3 text-[17px] text-ink placeholder-ink-muted focus:outline-none focus:border-primary'
+  const dateInputClass = `${inputClass} [&::-webkit-date-and-time-value]:text-left appearance-none`
   const submitBtn = (label: string, loading: boolean, onClick: () => void) => (
     <button
       onClick={onClick}
@@ -391,7 +392,7 @@ export default function MyPage() {
         {showBalanceForm && (
           <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
             <input className={inputClass} type="number" placeholder="金額（円）" value={balAmount} onChange={(e) => setBalAmount(e.target.value)} />
-            <input className={inputClass} type="date" value={balDate} onChange={(e) => setBalDate(e.target.value)} />
+            <input className={dateInputClass} type="date" value={balDate} onChange={(e) => setBalDate(e.target.value)} />
             <select className={inputClass} value={balType} onChange={(e) => setBalType(e.target.value as BalanceType)}>
               <option value="INITIAL">初期設定</option>
               <option value="ADJUSTMENT">手動調整</option>
@@ -569,7 +570,7 @@ export default function MyPage() {
           <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
             <input className={inputClass} type="text" placeholder="タイトル（例：ボーナス）" value={irTitle} onChange={(e) => setIrTitle(e.target.value)} />
             <input className={inputClass} type="number" placeholder="金額（円）" value={irAmount} onChange={(e) => setIrAmount(e.target.value)} />
-            <input className={inputClass} type="date" value={irDate} onChange={(e) => setIrDate(e.target.value)} />
+            <input className={dateInputClass} type="date" value={irDate} onChange={(e) => setIrDate(e.target.value)} />
             <input className={inputClass} type="text" placeholder="メモ（任意）" value={irMemo} onChange={(e) => setIrMemo(e.target.value)} />
             {irError && <p className="text-[13px] text-red-500">{irError}</p>}
             <div className="flex gap-2">
@@ -679,7 +680,7 @@ export default function MyPage() {
               <option value="SPOT">スポット追加</option>
             </select>
             <input className={inputClass} type="number" placeholder="投資金額（円）" value={invRecAmount} onChange={(e) => setInvRecAmount(e.target.value)} />
-            <input className={inputClass} type="date" value={invRecDate} onChange={(e) => setInvRecDate(e.target.value)} />
+            <input className={dateInputClass} type="date" value={invRecDate} onChange={(e) => setInvRecDate(e.target.value)} />
             <input className={inputClass} type="text" placeholder="メモ（任意）" value={invRecMemo} onChange={(e) => setInvRecMemo(e.target.value)} />
             {invRecError && <p className="text-[13px] text-red-500">{invRecError}</p>}
             <div className="flex gap-2">
