@@ -64,7 +64,7 @@ export default function RecordsPage() {
     try {
       const created = await createIncomeRecord({ title: irTitle, amount, incomeDate: irDate, memo: irMemo || null, isRegular: false })
       setIncomeRecords((prev) => [created, ...prev])
-      setShowIrForm(false); setIrTitle(''); setIrAmount(''); setIrMemo('')
+      setShowIrForm(false); setIrTitle(''); setIrAmount(''); setIrMemo(''); setIrDate(todayString())
     } catch (e: unknown) {
       setIrError(e instanceof Error ? e.message : '登録に失敗しました')
     } finally {
@@ -99,7 +99,7 @@ export default function RecordsPage() {
     try {
       const created = await createInvestRecord({ amount, investDate: invRecDate, investType: invRecType, memo: invRecMemo || null })
       setInvestRecords((prev) => [created, ...prev])
-      setShowInvRecForm(false); setInvRecAmount(''); setInvRecMemo('')
+      setShowInvRecForm(false); setInvRecAmount(''); setInvRecMemo(''); setInvRecDate(todayString()); setInvRecType('INITIAL')
     } catch (e: unknown) {
       setInvRecError(e instanceof Error ? e.message : '登録に失敗しました')
     } finally {
@@ -133,7 +133,7 @@ export default function RecordsPage() {
       <button
         onClick={onClick}
         disabled={loading}
-        className="flex-1 h-10 rounded-pill bg-primary text-white text-[14px] active:scale-95 transition-transform disabled:opacity-60"
+        className="flex-1 h-11 rounded-pill bg-primary text-white text-[17px] font-sans active:scale-95 transition-transform disabled:opacity-40"
       >
         {loading ? '登録中...' : label}
       </button>
@@ -167,7 +167,7 @@ export default function RecordsPage() {
             <input className={inputClass} type="text" placeholder="メモ（任意）" value={irMemo} onChange={(e) => setIrMemo(e.target.value)} />
             {irError && <p className="text-[13px] text-red-500">{irError}</p>}
             <div className="flex gap-2">
-              <button onClick={() => setShowIrForm(false)} className="flex-1 h-10 rounded-pill border border-hairline text-ink text-[14px] active:scale-95 transition-transform">キャンセル</button>
+              <button onClick={() => { setShowIrForm(false); setIrTitle(''); setIrAmount(''); setIrMemo(''); setIrDate(todayString()) }} className="flex-1 h-10 rounded-pill border border-hairline text-ink text-[14px] active:scale-95 transition-transform">キャンセル</button>
               {submitBtn('登録する', irSubmitting, handleIrSubmit)}
             </div>
           </div>
@@ -231,7 +231,7 @@ export default function RecordsPage() {
             <input className={inputClass} type="text" placeholder="メモ（任意）" value={invRecMemo} onChange={(e) => setInvRecMemo(e.target.value)} />
             {invRecError && <p className="text-[13px] text-red-500">{invRecError}</p>}
             <div className="flex gap-2">
-              <button onClick={() => setShowInvRecForm(false)} className="flex-1 h-10 rounded-pill border border-hairline text-ink text-[14px] active:scale-95 transition-transform">キャンセル</button>
+              <button onClick={() => { setShowInvRecForm(false); setInvRecAmount(''); setInvRecMemo(''); setInvRecDate(todayString()); setInvRecType('INITIAL') }} className="flex-1 h-10 rounded-pill border border-hairline text-ink text-[14px] active:scale-95 transition-transform">キャンセル</button>
               {submitBtn('登録する', invRecSubmitting, handleInvRecSubmit)}
             </div>
           </div>
@@ -256,8 +256,7 @@ export default function RecordsPage() {
                     <div>
                       <p className="text-[17px] font-semibold text-ink">{fmt(r.amount)}円</p>
                       <p className="text-[12px] text-ink-muted">
-                        {r.investDate}
-                        {{ INITIAL: '初期元本', REGULAR: '月次積立', SPOT: 'スポット' }[r.investType]}
+                        {r.investDate}　{{ INITIAL: '初期元本', REGULAR: '月次積立', SPOT: 'スポット' }[r.investType]}
                         {r.memo ? `　${r.memo}` : ''}
                       </p>
                     </div>
