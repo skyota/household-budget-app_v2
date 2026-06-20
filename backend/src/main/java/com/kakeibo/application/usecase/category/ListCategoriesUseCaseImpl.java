@@ -19,7 +19,7 @@ public class ListCategoriesUseCaseImpl implements ListCategoriesUseCase {
     @Transactional(readOnly = true)
     public List<CategoryResult> list(ListCategoriesQuery query) {
         return categoryRepository.findAllByUserId(query.userId()).stream()
-            .map(c -> new CategoryResult(c.getId(), c.getName(), c.getBudgetAmount().value()))
+            .map(c -> new CategoryResult(c.getId(), c.getName(), c.getBudgetAmount().value(), c.isSystem()))
             .toList();
     }
 }

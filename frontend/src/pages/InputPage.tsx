@@ -175,7 +175,7 @@ export default function InputPage() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
+              {categories.filter((cat) => !cat.isSystem).map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
@@ -189,7 +189,7 @@ export default function InputPage() {
                   {cat.name}
                 </button>
               ))}
-              {categories.length === 0 && (
+              {categories.filter((cat) => !cat.isSystem).length === 0 && (
                 <p className="text-[14px] text-ink-muted">
                   カテゴリがありません。「管理」から追加してください。
                 </p>
@@ -220,7 +220,7 @@ export default function InputPage() {
       </section>
 
       {/* カテゴリ別予算ゲージ */}
-      {categories.length > 0 && (
+      {categories.filter((cat) => !cat.isSystem).length > 0 && (
         <section className="mt-6 bg-canvas rounded-card border border-hairline p-5">
           <h2 className="font-display font-semibold text-[17px] tracking-tight text-ink mb-1">
             {year}年{month}月の支出
@@ -229,7 +229,7 @@ export default function InputPage() {
             合計: ¥{totalAmount.toLocaleString()}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {categories.map((cat, i) => (
+            {categories.filter((cat) => !cat.isSystem).map((cat, i) => (
               <CategoryGauge
                 key={cat.id}
                 category={cat}
@@ -241,7 +241,7 @@ export default function InputPage() {
         </section>
       )}
 
-      {categories.length === 0 && (
+      {categories.filter((cat) => !cat.isSystem).length === 0 && (
         <section className="mt-6 bg-canvas rounded-card border border-hairline p-5 text-center">
           <p className="text-[14px] text-ink-muted">カテゴリがありません。追加・編集から登録してください。</p>
         </section>
