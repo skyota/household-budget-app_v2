@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.kakeibo.application.usecase.fixedexpense.AutoGenerateFixedExpensesUseCase;
+import com.kakeibo.application.usecase.incomesetting.AutoGenerateIncomeRecordsUseCase;
+import com.kakeibo.application.usecase.investsetting.AutoGenerateInvestRecordsUseCase;
 
 @Component
 public class FixedExpenseScheduler {
@@ -15,14 +17,21 @@ public class FixedExpenseScheduler {
     private static final Logger log = LoggerFactory.getLogger(FixedExpenseScheduler.class);
 
     private final AutoGenerateFixedExpensesUseCase autoGenerateFixedExpensesUseCase;
+    private final AutoGenerateInvestRecordsUseCase autoGenerateInvestRecordsUseCase;
+    private final AutoGenerateIncomeRecordsUseCase autoGenerateIncomeRecordsUseCase;
 
-    public FixedExpenseScheduler(AutoGenerateFixedExpensesUseCase autoGenerateFixedExpensesUseCase) {
+    public FixedExpenseScheduler(
+            AutoGenerateFixedExpensesUseCase autoGenerateFixedExpensesUseCase,
+            AutoGenerateInvestRecordsUseCase autoGenerateInvestRecordsUseCase,
+            AutoGenerateIncomeRecordsUseCase autoGenerateIncomeRecordsUseCase) {
         this.autoGenerateFixedExpensesUseCase = autoGenerateFixedExpensesUseCase;
+        this.autoGenerateInvestRecordsUseCase = autoGenerateInvestRecordsUseCase;
+        this.autoGenerateIncomeRecordsUseCase = autoGenerateIncomeRecordsUseCase;
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void onStartup() {
-        log.info("Fixed expense auto-generation triggered on startup.");
+        log.info("Daily auto-generation triggered on startup.");
         runDailyAutoGeneration();
     }
 
@@ -34,6 +43,22 @@ public class FixedExpenseScheduler {
             log.info("Fixed expense auto-generation completed.");
         } catch (Exception e) {
             log.error("Fixed expense auto-generation failed.", e);
+        }
+
+        log.info("Invest record auto-generation started.");
+        try {
+            autoGenerateInvestRecordsUseCase.execute();
+            log.info("Invest record auto-generation completed.");
+        } catch (Exception e) {
+            log.error("Invest record auto-generation failed.", e);
+        }
+
+        log.info("Income record auto-generation started.");
+        try {
+            autoGenerateIncomeRecordsUseCase.execute();
+            log.info("Income record auto-generation completed.");
+        } catch (Exception e) {
+            log.error("Income record auto-generation failed.", e);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.kakeibo.infrastructure.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -7,6 +8,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
 import com.kakeibo.domain.model.invest.InvestRecord;
+import com.kakeibo.domain.model.invest.InvestType;
 import com.kakeibo.domain.repository.InvestRecordRepository;
 import com.kakeibo.infrastructure.entity.InvestRecordEntity;
 
@@ -29,6 +31,11 @@ public class JpaInvestRecordRepository implements InvestRecordRepository {
         return springDataInvestRecordRepository.findAllByUserId(userId).stream()
             .map(InvestRecordEntity::toModel)
             .toList();
+    }
+
+    @Override
+    public boolean existsByUserIdAndInvestTypeAndInvestDateBetween(UUID userId, InvestType investType, LocalDate startDate, LocalDate endDate) {
+        return springDataInvestRecordRepository.existsByUserIdAndInvestTypeAndInvestDateBetween(userId, investType, startDate, endDate);
     }
 
     @Override
