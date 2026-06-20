@@ -42,6 +42,10 @@ public class AutoGenerateInvestRecordsUseCaseImpl implements AutoGenerateInvestR
         for (InvestSetting setting : allSettings) {
             LocalDate investDate = setting.getInvestDate().resolveActualDate(currentMonth);
 
+            if (setting.getAmount() == 0) {
+                continue;
+            }
+
             if (!investDate.isAfter(today)) {
                 boolean alreadyCreated = investRecordRepository
                     .existsByUserIdAndInvestTypeAndInvestDateBetween(
@@ -51,7 +55,7 @@ public class AutoGenerateInvestRecordsUseCaseImpl implements AutoGenerateInvestR
                     InvestRecord record = new InvestRecord(
                         null,
                         setting.getAmount(),
-                        today,
+                        investDate,
                         InvestType.REGULAR,
                         null,
                         setting.getUserId());
