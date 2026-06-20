@@ -1,5 +1,6 @@
 package com.kakeibo.infrastructure.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,6 +22,13 @@ public class JpaInvestSettingRepository implements InvestSettingRepository {
     public Optional<InvestSetting> findByUserId(UUID userId) {
         return springDataInvestSettingRepository.findByUserId(userId)
             .map(InvestSettingEntity::toModel);
+    }
+
+    @Override
+    public List<InvestSetting> findAll() {
+        return springDataInvestSettingRepository.findAll().stream()
+            .map(InvestSettingEntity::toModel)
+            .toList();
     }
 
     @Override
