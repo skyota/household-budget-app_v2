@@ -9,8 +9,9 @@ public class Category {
     private String name;
     private BudgetAmount budgetAmount;
     private final UUID userId;
+    private final boolean isSystem;
 
-    public Category(Long id, String name, BudgetAmount budgetAmount, UUID userId) {
+    public Category(Long id, String name, BudgetAmount budgetAmount, UUID userId, boolean isSystem) {
         if (name == null || name.isBlank()) {
             throw new DomainValidationException("カテゴリー名は必須です。");
         }
@@ -27,6 +28,7 @@ public class Category {
         this.name = name;
         this.budgetAmount = budgetAmount;
         this.userId = userId;
+        this.isSystem = isSystem;
     }
 
     public Long getId() {
@@ -43,5 +45,9 @@ public class Category {
 
     public UUID getUserId() {
         return userId;
+    }
+
+    public boolean isSystem() {
+        return isSystem;
     }
 }

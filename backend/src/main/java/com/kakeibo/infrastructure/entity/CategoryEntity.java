@@ -27,6 +27,7 @@ public class CategoryEntity {
     private String name;
     private long budgetAmount;
     private UUID userId;
+    private boolean isSystem;
 
     public static CategoryEntity fromModel(Category category) {
         CategoryEntity entity = new CategoryEntity();
@@ -34,10 +35,11 @@ public class CategoryEntity {
         entity.setName(category.getName());
         entity.setBudgetAmount(category.getBudgetAmount().value());
         entity.setUserId(category.getUserId());
+        entity.setSystem(category.isSystem());
         return entity;
     }
 
     public Category toModel() {
-        return new Category(id, name, new BudgetAmount(budgetAmount), userId);
+        return new Category(id, name, new BudgetAmount(budgetAmount), userId, isSystem);
     }
 }

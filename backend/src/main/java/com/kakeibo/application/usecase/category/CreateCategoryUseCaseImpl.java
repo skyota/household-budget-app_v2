@@ -27,14 +27,16 @@ public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
             null,
             command.name(),
             new BudgetAmount(command.budgetAmount()),
-            command.userId()
+            command.userId(),
+            false
         );
 
         Category saved = categoryRepository.save(category);
         return new CategoryResult(
             saved.getId(),
             saved.getName(),
-            saved.getBudgetAmount().value()
+            saved.getBudgetAmount().value(),
+            saved.isSystem()
         );
     }
 }

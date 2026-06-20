@@ -32,6 +32,13 @@ public class JpaFixedExpenseRepository implements FixedExpenseRepository {
     }
 
     @Override
+    public List<FixedExpense> findAll() {
+        return springDataFixedExpenseRepository.findAll().stream()
+            .map(FixedExpenseEntity::toModel)
+            .toList();
+    }
+
+    @Override
     public FixedExpense save(FixedExpense fixedExpense) {
         return springDataFixedExpenseRepository.save(
             FixedExpenseEntity.fromModel(fixedExpense)

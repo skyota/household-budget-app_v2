@@ -54,7 +54,7 @@ public class CategoryController {
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(new CategoryResponse(result.id(), result.name(), result.budgetAmount()));
+            .body(new CategoryResponse(result.id(), result.name(), result.budgetAmount(), result.isSystem()));
     }
 
     @GetMapping
@@ -67,7 +67,7 @@ public class CategoryController {
 
         return ResponseEntity.ok(
             result.stream()
-                .map(item -> new CategoryResponse(item.id(), item.name(), item.budgetAmount()))
+                .map(item -> new CategoryResponse(item.id(), item.name(), item.budgetAmount(), item.isSystem()))
                 .toList()
         );
     }
@@ -83,7 +83,7 @@ public class CategoryController {
         );
 
         return ResponseEntity.ok(
-            new CategoryResponse(result.id(), result.name(), result.budgetAmount())
+            new CategoryResponse(result.id(), result.name(), result.budgetAmount(), result.isSystem())
         );
     }
 

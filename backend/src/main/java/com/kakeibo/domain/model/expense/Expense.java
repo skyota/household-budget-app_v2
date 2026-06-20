@@ -13,8 +13,13 @@ public class Expense {
     private Long categoryId;
     private String memo;
     private final UUID userId;
+    private final Long fixedExpenseId;
 
     public Expense(Long id, String title, Price price, LocalDate expenseDate, Long categoryId, String memo, UUID userId) {
+        this(id, title, price, expenseDate, categoryId, memo, userId, null);
+    }
+
+    public Expense(Long id, String title, Price price, LocalDate expenseDate, Long categoryId, String memo, UUID userId, Long fixedExpenseId) {
         if (title == null || title.isBlank()) {
             throw new DomainValidationException("タイトルは必須です。");
         }
@@ -30,7 +35,7 @@ public class Expense {
         if (userId == null) {
             throw new DomainValidationException("ユーザーIDは必須です。");
         }
-        
+
         this.id = id;
         this.title = title;
         this.price = price;
@@ -38,6 +43,7 @@ public class Expense {
         this.categoryId = categoryId;
         this.memo = memo;
         this.userId = userId;
+        this.fixedExpenseId = fixedExpenseId;
     }
 
     public Long getId() {
@@ -63,8 +69,12 @@ public class Expense {
     public String getMemo() {
         return memo;
     }
-    
+
     public UUID getUserId() {
         return userId;
+    }
+
+    public Long getFixedExpenseId() {
+        return fixedExpenseId;
     }
 }

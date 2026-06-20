@@ -193,7 +193,7 @@ export default function HistoryPage() {
       )}
 
       {/* カテゴリ別予算ゲージ */}
-      {categories.length > 0 && (
+      {categories.filter((cat) => !cat.isSystem).length > 0 && (
         <section className="mt-4 mb-10 bg-canvas rounded-card border border-hairline p-5">
           <h2 className="font-display font-semibold text-[17px] tracking-tight text-ink mb-1">
             {year}年{month}月の支出
@@ -202,7 +202,7 @@ export default function HistoryPage() {
             合計: ¥{chartExpenses.reduce((s, e) => s + e.price, 0).toLocaleString()}
           </p>
           <div className="grid grid-cols-2 gap-2">
-            {categories.map((cat, i) => (
+            {categories.filter((cat) => !cat.isSystem).map((cat, i) => (
               <CategoryGauge
                 key={cat.id}
                 category={cat}

@@ -32,6 +32,12 @@ public class JpaCategoryRepository implements CategoryRepository {
     }
 
     @Override
+    public Optional<Category> findSystemCategoryByUserId(UUID userId) {
+        return springDataCategoryRepository.findFirstByUserIdAndIsSystem(userId, true)
+            .map(CategoryEntity::toModel);
+    }
+
+    @Override
     public Category save(Category category) {
         CategoryEntity entity = CategoryEntity.fromModel(category);
         return springDataCategoryRepository.save(entity).toModel();

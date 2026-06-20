@@ -1,5 +1,6 @@
 package com.kakeibo.infrastructure.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +30,11 @@ public class JpaExpenseRepository implements ExpenseRepository {
         return springDataExpenseRepository.findAllByUserId(userId).stream()
             .map(ExpenseEntity::toModel)
             .toList();
+    }
+
+    @Override
+    public boolean existsByFixedExpenseIdAndExpenseDateBetween(Long fixedExpenseId, LocalDate startDate, LocalDate endDate) {
+        return springDataExpenseRepository.existsByFixedExpenseIdAndExpenseDateBetween(fixedExpenseId, startDate, endDate);
     }
 
     @Override
