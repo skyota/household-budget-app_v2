@@ -32,6 +32,13 @@ public class JpaIncomeSettingRepository implements IncomeSettingRepository {
     }
 
     @Override
+    public List<IncomeSetting> findAll() {
+        return springDataIncomeSettingRepository.findAll().stream()
+            .map(IncomeSettingEntity::toModel)
+            .toList();
+    }
+
+    @Override
     public IncomeSetting save(IncomeSetting incomeSetting) {
         return springDataIncomeSettingRepository.save(
             IncomeSettingEntity.fromModel(incomeSetting)
