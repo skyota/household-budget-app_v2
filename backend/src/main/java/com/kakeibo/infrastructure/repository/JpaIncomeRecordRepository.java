@@ -33,8 +33,8 @@ public class JpaIncomeRecordRepository implements IncomeRecordRepository {
     }
 
     @Override
-    public boolean existsByUserIdAndIsRegularAndTitleAndIncomeDateBetween(UUID userId, boolean isRegular, String title, LocalDate startDate, LocalDate endDate) {
-        return springDataIncomeRecordRepository.existsByUserIdAndIsRegularAndTitleAndIncomeDateBetween(userId, isRegular, title, startDate, endDate);
+    public boolean existsRegularIncomeByUserIdAndTitleAndIncomeDateBetween(UUID userId, String title, LocalDate startDate, LocalDate endDate) {
+        return springDataIncomeRecordRepository.existsRegularIncomeByUserIdAndTitleAndIncomeDateBetween(userId, title, startDate, endDate);
     }
 
     @Override

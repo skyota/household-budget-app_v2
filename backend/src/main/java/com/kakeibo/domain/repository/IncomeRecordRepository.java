@@ -10,7 +10,7 @@ import com.kakeibo.domain.model.income.IncomeRecord;
 public interface IncomeRecordRepository {
     Optional<IncomeRecord> findByIdAndUserId(Long id, UUID userId);
     List<IncomeRecord> findAllByUserId(UUID userId);
-    boolean existsByUserIdAndIsRegularAndTitleAndIncomeDateBetween(UUID userId, boolean isRegular, String title, LocalDate startDate, LocalDate endDate);
+    boolean existsRegularIncomeByUserIdAndTitleAndIncomeDateBetween(UUID userId, String title, LocalDate startDate, LocalDate endDate);
     IncomeRecord save(IncomeRecord incomeRecord);
     void delete(IncomeRecord incomeRecord);
 }
