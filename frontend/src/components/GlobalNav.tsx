@@ -50,6 +50,17 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    path: '/records',
+    label: '記録',
+    slot: 'right',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <rect x="4" y="3" width="14" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M8 8h6M8 12h6M8 16h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
     path: '/mypage',
     label: 'マイページ',
     slot: 'right',

@@ -2,6 +2,7 @@ export interface Category {
   id: number
   name: string
   budgetAmount: number
+  isSystem: boolean
 }
 
 export interface ExpenseItem {

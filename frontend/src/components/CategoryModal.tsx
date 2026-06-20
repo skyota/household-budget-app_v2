@@ -106,11 +106,11 @@ export default function CategoryModal({ categories, onClose, onUpdate }: Props) 
 
         <div className="overflow-y-auto flex-1">
           {/* カテゴリー一覧 */}
-          {categories.length > 0 && (
+          {categories.filter((cat) => !cat.isSystem).length > 0 && (
             <div className="px-5 py-3">
               <p className="text-[12px] text-ink-muted mb-2">登録済みカテゴリー</p>
               <div className="flex flex-col gap-1">
-                {categories.map((cat) => (
+                {categories.filter((cat) => !cat.isSystem).map((cat) => (
                   <div
                     key={cat.id}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-[12px] border transition-colors ${

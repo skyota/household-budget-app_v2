@@ -31,6 +31,8 @@ public class ExpenseEntity {
     private Long categoryId;
     private String memo;
     private UUID userId;
+    private Long fixedExpenseId;
+    private boolean isFixed;
 
     public static ExpenseEntity fromModel(Expense expense) {
         // staticメソッドを使えば、インスタンスを作らなくてもクラス名で直接呼ぶことができる
@@ -43,10 +45,12 @@ public class ExpenseEntity {
         entity.setCategoryId(expense.getCategoryId());
         entity.setMemo(expense.getMemo());
         entity.setUserId(expense.getUserId());
+        entity.setFixedExpenseId(expense.getFixedExpenseId());
+        entity.setFixed(expense.getFixedExpenseId() != null);
         return entity;
     }
 
     public Expense toModel() {
-        return new Expense(id, title, new Price(price), expenseDate, categoryId, memo, userId);
+        return new Expense(id, title, new Price(price), expenseDate, categoryId, memo, userId, fixedExpenseId);
     }
 }

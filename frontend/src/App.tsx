@@ -7,6 +7,7 @@ import InputPage from './pages/InputPage'
 import HistoryPage from './pages/HistoryPage'
 import MyPage from './pages/MyPage'
 import AssetPage from './pages/AssetPage'
+import RecordsPage from './pages/RecordsPage'
 import LandingPage from './pages/LandingPage'
 import type { ReactNode } from 'react'
 
@@ -86,6 +87,16 @@ export default function App() {
           <ProtectedRoute>
             <AuthLayout>
               <AssetPage />
+            </AuthLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/records"
+        element={
+          <ProtectedRoute>
+            <AuthLayout>
+              <RecordsPage />
             </AuthLayout>
           </ProtectedRoute>
         }
