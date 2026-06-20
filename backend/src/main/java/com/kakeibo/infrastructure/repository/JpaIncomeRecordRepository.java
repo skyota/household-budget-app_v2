@@ -1,5 +1,6 @@
 package com.kakeibo.infrastructure.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,6 +30,11 @@ public class JpaIncomeRecordRepository implements IncomeRecordRepository {
         return springDataIncomeRecordRepository.findAllByUserId(userId).stream()
             .map(IncomeRecordEntity::toModel)
             .toList();
+    }
+
+    @Override
+    public boolean existsRegularIncomeByUserIdAndTitleAndIncomeDateBetween(UUID userId, String title, LocalDate startDate, LocalDate endDate) {
+        return springDataIncomeRecordRepository.existsRegularIncomeByUserIdAndTitleAndIncomeDateBetween(userId, title, startDate, endDate);
     }
 
     @Override
