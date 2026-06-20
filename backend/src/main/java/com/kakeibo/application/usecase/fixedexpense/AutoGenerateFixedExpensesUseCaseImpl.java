@@ -71,7 +71,7 @@ public class AutoGenerateFixedExpensesUseCaseImpl implements AutoGenerateFixedEx
                                 null,
                                 fe.getTitle(),
                                 new Price(fe.getPrice()),
-                                paymentDate,
+                                today,
                                 systemCategory.getId(),
                                 null,
                                 userId,
