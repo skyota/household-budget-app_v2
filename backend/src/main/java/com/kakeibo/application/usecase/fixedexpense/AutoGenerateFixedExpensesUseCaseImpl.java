@@ -2,6 +2,7 @@ package com.kakeibo.application.usecase.fixedexpense;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -40,7 +41,7 @@ public class AutoGenerateFixedExpensesUseCaseImpl implements AutoGenerateFixedEx
     @Override
     @Transactional
     public void execute() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Tokyo"));
         YearMonth currentMonth = YearMonth.from(today);
         LocalDate startOfMonth = currentMonth.atDay(1);
         LocalDate endOfMonth = currentMonth.atEndOfMonth();

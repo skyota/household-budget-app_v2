@@ -2,6 +2,7 @@ package com.kakeibo.application.usecase.incomesetting;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -32,7 +33,7 @@ public class AutoGenerateIncomeRecordsUseCaseImpl implements AutoGenerateIncomeR
     @Override
     @Transactional
     public void execute() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneId.of("Asia/Tokyo"));
         YearMonth currentMonth = YearMonth.from(today);
         LocalDate startOfMonth = currentMonth.atDay(1);
         LocalDate endOfMonth = currentMonth.atEndOfMonth();
