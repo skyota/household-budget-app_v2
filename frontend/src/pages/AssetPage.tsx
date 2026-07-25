@@ -177,7 +177,7 @@ export default function AssetPage() {
 
       {/* タブ */}
       <div className="flex bg-parchment rounded-pill p-1 mb-6">
-        {([['total', '総資産'], ['trend', '投資推移']] as [Tab, string][]).map(([key, label]) => (
+        {([['total', '総資産'], ['trend', '資産推移']] as [Tab, string][]).map(([key, label]) => (
           <button
             key={key}
             onClick={() => setTab(key)}
