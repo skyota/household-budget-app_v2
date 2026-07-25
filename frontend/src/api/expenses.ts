@@ -1,6 +1,15 @@
 import { apiFetch, extractErrorMessage, dispatchUnauthorized } from './client'
 import type { ExpenseListResponse } from '../types'
 
+export async function listAllExpenses(): Promise<ExpenseListResponse> {
+  const res = await apiFetch('/expenses?page=1&perPage=200')
+  if (!res.ok) {
+    if (res.status === 401) dispatchUnauthorized()
+    throw new Error(await extractErrorMessage(res, '支出の取得に失敗しました'))
+  }
+  return res.json()
+}
+
 export async function listExpenses(
   year: number,
   month: number,
