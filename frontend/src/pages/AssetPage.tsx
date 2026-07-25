@@ -5,22 +5,32 @@ import {
 } from 'recharts'
 import { getAssetSummary } from '../api/assets'
 import { listInvestRecords } from '../api/investRecords'
-import type { AssetSummary, InvestRecord } from '../types'
+import { listCashBalances } from '../api/cashBalances'
+import { listIncomeRecords } from '../api/incomeRecords'
+import { listAllExpenses } from '../api/expenses'
+import type { AssetSummary, InvestRecord, CashBalance, ExpenseItem } from '../types'
+import type { IncomeRecord } from '../api/incomeRecords'
 
 type Tab = 'total' | 'trend'
 type Period = '6m' | '1y' | 'all'
 
 const PIE_COLORS = ['#0066cc', '#34c759']
+const TREND_COLORS = { cash: '#0066cc', nisa: '#34c759' }
 
 function fmt(n: number) {
   return n.toLocaleString('ja-JP')
 }
 
-function buildTrendData(records: InvestRecord[], period: Period) {
-  if (records.length === 0) return []
-
-  const sorted = [...records].sort((a, b) => a.investDate.localeCompare(b.investDate))
+function buildCombinedTrendData(
+  investRecords: InvestRecord[],
+  cashBalances: CashBalance[],
+  incomeRecords: IncomeRecord[],
+  expenses: ExpenseItem[],
+  period: Period
+) {
   const now = new Date()
+  const sortedInvest = [...investRecords].sort((a, b) => a.investDate.localeCompare(b.investDate))
+  const sortedAnchors = [...cashBalances].sort((a, b) => a.balanceDate.localeCompare(b.balanceDate))
 
   let startDate: Date
   if (period === '6m') {
@@ -28,8 +38,12 @@ function buildTrendData(records: InvestRecord[], period: Period) {
   } else if (period === '1y') {
     startDate = new Date(now.getFullYear() - 1, now.getMonth() + 1, 1)
   } else {
-    const first = new Date(sorted[0].investDate)
-    startDate = new Date(first.getFullYear(), first.getMonth(), 1)
+    const candidates: Date[] = []
+    if (sortedInvest.length > 0) candidates.push(new Date(sortedInvest[0].investDate))
+    if (sortedAnchors.length > 0) candidates.push(new Date(sortedAnchors[0].balanceDate))
+    if (candidates.length === 0) return []
+    const earliest = candidates.reduce((a, b) => (a < b ? a : b))
+    startDate = new Date(earliest.getFullYear(), earliest.getMonth(), 1)
   }
 
   const months: string[] = []
@@ -45,19 +59,50 @@ function buildTrendData(records: InvestRecord[], period: Period) {
   if (months.length === 0) return []
 
   const startPrefix = months[0]
-  let cumulative = sorted
+  let nisaCumulative = sortedInvest
     .filter((r) => r.investDate < startPrefix + '-01')
     .reduce((sum, r) => sum + r.amount, 0)
 
   return months.map((month) => {
-    const added = sorted
+    const [y, m] = month.split('-').map(Number)
+    const nextMonthStr =
+      m === 12
+        ? `${y + 1}-01-01`
+        : `${y}-${String(m + 1).padStart(2, '0')}-01`
+
+    // NISA元本（累計）
+    const nisaAdded = sortedInvest
       .filter((r) => r.investDate.startsWith(month))
       .reduce((sum, r) => sum + r.amount, 0)
-    cumulative += added
-    const m = parseInt(month.slice(5, 7))
-    const y = month.slice(2, 4)
-    const label = period === 'all' && m === 1 ? `'${y}年` : `${m}月`
-    return { month, label, total: cumulative }
+    nisaCumulative += nisaAdded
+
+    // 現金残高: 基準点(anchor)から月末までの収支を計算
+    const anchor = sortedAnchors.filter((a) => a.balanceDate < nextMonthStr).slice(-1)[0]
+    let cashBalance: number | null = null
+    if (anchor) {
+      const B = anchor.amount
+      const I = incomeRecords
+        .filter((r) => r.incomeDate >= anchor.balanceDate && r.incomeDate < nextMonthStr)
+        .reduce((sum, r) => sum + r.amount, 0)
+      const E = expenses
+        .filter((r) => r.expenseDate >= anchor.balanceDate && r.expenseDate < nextMonthStr)
+        .reduce((sum, r) => sum + r.price, 0)
+      const V = investRecords
+        .filter(
+          (r) =>
+            r.investDate >= anchor.balanceDate &&
+            r.investDate < nextMonthStr &&
+            r.investType !== 'INITIAL'
+        )
+        .reduce((sum, r) => sum + r.amount, 0)
+      cashBalance = B + I - E - V
+    }
+
+    const mn = parseInt(month.slice(5, 7))
+    const yr = month.slice(2, 4)
+    const label = period === 'all' && mn === 1 ? `'${yr}年` : `${mn}月`
+
+    return { month, label, nisaTotal: nisaCumulative, cashBalance }
   })
 }
 
@@ -65,15 +110,27 @@ export default function AssetPage() {
   const [tab, setTab] = useState<Tab>('total')
   const [summary, setSummary] = useState<AssetSummary | null>(null)
   const [investRecords, setInvestRecords] = useState<InvestRecord[]>([])
+  const [cashBalances, setCashBalances] = useState<CashBalance[]>([])
+  const [incomeRecords, setIncomeRecords] = useState<IncomeRecord[]>([])
+  const [expenses, setExpenses] = useState<ExpenseItem[]>([])
   const [period, setPeriod] = useState<Period>('1y')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([getAssetSummary(), listInvestRecords()])
-      .then(([s, r]) => {
+    Promise.all([
+      getAssetSummary(),
+      listInvestRecords(),
+      listCashBalances(),
+      listIncomeRecords(),
+      listAllExpenses(),
+    ])
+      .then(([s, inv, cb, inc, exp]) => {
         setSummary(s)
-        setInvestRecords(r.data)
+        setInvestRecords(inv.data)
+        setCashBalances(cb.data)
+        setIncomeRecords(inc.data)
+        setExpenses(exp.expenses)
       })
       .catch(() => setError('データの取得に失敗しました'))
       .finally(() => setLoading(false))
@@ -86,7 +143,17 @@ export default function AssetPage() {
       ]
     : []
 
-  const trendData = buildTrendData(investRecords, period)
+  const combinedData = buildCombinedTrendData(
+    investRecords,
+    cashBalances,
+    incomeRecords,
+    expenses,
+    period
+  )
+  const hasChartData =
+    combinedData.length > 1 &&
+    (combinedData.some((d) => d.nisaTotal > 0) ||
+      combinedData.some((d) => d.cashBalance !== null))
 
   if (loading) {
     return (
@@ -179,7 +246,6 @@ export default function AssetPage() {
               </p>
             </div>
           )}
-
         </div>
       )}
 
@@ -202,25 +268,43 @@ export default function AssetPage() {
             ))}
           </div>
 
-          {/* 現在の元本 */}
-          {investRecords.length > 0 && (
-            <div className="text-center mb-6">
-              <p className="text-[14px] text-ink-muted mb-1">NISA元本（累計）</p>
-              <p className="text-[34px] font-semibold text-ink tracking-tight">
-                {fmt(investRecords.reduce((s, r) => s + r.amount, 0))}
-                <span className="text-[18px] font-normal ml-1">円</span>
+          {/* サマリー */}
+          <div className="flex justify-around mb-6">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: TREND_COLORS.cash }} />
+                <p className="text-[13px] text-ink-muted">現金残高</p>
+              </div>
+              <p className="text-[26px] font-semibold text-ink tracking-tight">
+                {summary ? fmt(summary.cashBalance) : '-'}
+                <span className="text-[15px] font-normal ml-1">円</span>
               </p>
             </div>
-          )}
+            <div className="w-px bg-hairline" />
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1.5 mb-1">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: TREND_COLORS.nisa }} />
+                <p className="text-[13px] text-ink-muted">NISA元本（累計）</p>
+              </div>
+              <p className="text-[26px] font-semibold text-ink tracking-tight">
+                {fmt(investRecords.reduce((s, r) => s + r.amount, 0))}
+                <span className="text-[15px] font-normal ml-1">円</span>
+              </p>
+            </div>
+          </div>
 
           {/* 推移グラフ */}
-          {trendData.length > 1 ? (
+          {hasChartData ? (
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={trendData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <AreaChart data={combinedData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <defs>
-                  <linearGradient id="investGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0066cc" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#0066cc" stopOpacity={0} />
+                  <linearGradient id="nisaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={TREND_COLORS.nisa} stopOpacity={0.15} />
+                    <stop offset="95%" stopColor={TREND_COLORS.nisa} stopOpacity={0} />
+                  </linearGradient>
+                  <linearGradient id="cashGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={TREND_COLORS.cash} stopOpacity={0.15} />
+                    <stop offset="95%" stopColor={TREND_COLORS.cash} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis
@@ -238,23 +322,36 @@ export default function AssetPage() {
                   width={36}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`${fmt(value)}円`, 'NISA元本']}
+                  formatter={(value: number, name: string) => [
+                    `${fmt(value)}円`,
+                    name === 'nisaTotal' ? 'NISA元本' : '現金残高',
+                  ]}
                   labelFormatter={(label) => `${label}`}
                 />
                 <Area
                   type="monotone"
-                  dataKey="total"
-                  stroke="#0066cc"
+                  dataKey="nisaTotal"
+                  stroke={TREND_COLORS.nisa}
                   strokeWidth={2}
-                  fill="url(#investGrad)"
+                  fill="url(#nisaGrad)"
                   dot={false}
+                  connectNulls
+                />
+                <Area
+                  type="monotone"
+                  dataKey="cashBalance"
+                  stroke={TREND_COLORS.cash}
+                  strokeWidth={2}
+                  fill="url(#cashGrad)"
+                  dot={false}
+                  connectNulls
                 />
               </AreaChart>
             </ResponsiveContainer>
           ) : (
             <div className="bg-parchment rounded-card p-6 text-center">
               <p className="text-[14px] text-ink-muted">
-                マイページで投資履歴を登録すると推移が表示されます
+                マイページで投資履歴または現金残高を登録すると推移が表示されます
               </p>
             </div>
           )}
