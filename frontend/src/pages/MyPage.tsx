@@ -10,12 +10,13 @@ import {
 import {
   getInvestSetting, createInvestSetting, updateInvestSetting,
 } from '../api/investSettings'
+import { getLivingBudget, saveLivingBudget } from '../api/livingBudget'
 import {
   listCashBalances, createCashBalance, deleteCashBalance,
 } from '../api/cashBalances'
 import type {
   FixedExpense, IncomeSetting, InvestSetting,
-  CashBalance, BalanceType,
+  CashBalance, BalanceType, LivingBudget,
 } from '../types'
 
 const SHORTCUT_URL = 'https://www.icloud.com/shortcuts/b6bf13da7e224db2924ee8911d862a09'
@@ -29,6 +30,12 @@ function fmt(n: number) {
 }
 
 export default function MyPage() {
+  const [livingBudget, setLivingBudget] = useState<LivingBudget>({ amount: 65000 })
+  const [livingBudgetAmount, setLivingBudgetAmount] = useState('65000')
+  const [showLivingBudgetForm, setShowLivingBudgetForm] = useState(false)
+  const [livingBudgetSubmitting, setLivingBudgetSubmitting] = useState(false)
+  const [livingBudgetError, setLivingBudgetError] = useState<string | null>(null)
+
   // ── トースト ──
   const [toast, setToast] = useState<{ message: string; onUndo: () => void } | null>(null)
   const [toastKey, setToastKey] = useState(0)
@@ -90,6 +97,10 @@ export default function MyPage() {
   const [invSetError, setInvSetError] = useState<string | null>(null)
 
   useEffect(() => {
+    getLivingBudget().then((budget) => {
+      setLivingBudget(budget)
+      setLivingBudgetAmount(String(budget.amount))
+    }).catch(() => {})
     getApiToken().then((r) => setToken(r.token)).catch(() => setTokenError('トークンの取得に失敗しました'))
     listCashBalances().then((r) => setBalances(r.data)).catch(() => {})
     listFixedExpenses().then((r) => setFixedExpenses(r.data)).catch(() => {})
@@ -98,6 +109,25 @@ export default function MyPage() {
       .then((s) => { setInvestSetting(s); setInvestSettingExists(true) })
       .catch(() => setInvestSettingExists(false))
   }, [])
+
+  async function handleLivingBudgetSubmit() {
+    const amount = Number(livingBudgetAmount)
+    if (livingBudgetAmount.trim() === '' || !Number.isSafeInteger(amount) || amount < 0) {
+      setLivingBudgetError('0円以上の整数を入力してください')
+      return
+    }
+    setLivingBudgetSubmitting(true)
+    setLivingBudgetError(null)
+    try {
+      const saved = await saveLivingBudget(amount)
+      setLivingBudget(saved)
+      setShowLivingBudgetForm(false)
+    } catch (e: unknown) {
+      setLivingBudgetError(e instanceof Error ? e.message : '生活費予算の保存に失敗しました')
+    } finally {
+      setLivingBudgetSubmitting(false)
+    }
+  }
 
   // ── APIトークン ──
   async function handleCopy() {
@@ -271,6 +301,39 @@ export default function MyPage() {
   return (
     <div className="px-5 pt-6 pb-32 max-w-lg mx-auto overflow-x-hidden">
       <h1 className="text-[28px] font-semibold text-ink tracking-tight mb-8">マイページ</h1>
+
+      {/* ── 生活費予算 ── */}
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-3">
+          {sectionTitle('生活費予算')}
+          <button
+            onClick={() => {
+              setLivingBudgetAmount(String(livingBudget.amount))
+              setShowLivingBudgetForm(!showLivingBudgetForm)
+              setLivingBudgetError(null)
+            }}
+            className="text-[14px] text-primary font-semibold active:opacity-60"
+          >
+            {showLivingBudgetForm ? '－ 閉じる' : '編集'}
+          </button>
+        </div>
+        <p className="text-[13px] text-ink-muted mb-3 leading-relaxed">毎月の生活費の予算を設定します。</p>
+
+        {showLivingBudgetForm ? (
+          <div className="bg-parchment rounded-card px-4 py-4 mb-3 space-y-3 overflow-hidden">
+            <input className={inputClass} type="number" min={0} step={1} placeholder="毎月の生活費予算（円）" value={livingBudgetAmount} onChange={(e) => setLivingBudgetAmount(e.target.value)} />
+            {livingBudgetError && <p className="text-[13px] text-red-500">{livingBudgetError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setShowLivingBudgetForm(false)} className="flex-1 h-10 rounded-pill border border-hairline text-ink text-[14px] active:scale-95 transition-transform">キャンセル</button>
+              {submitBtn('保存する', livingBudgetSubmitting, handleLivingBudgetSubmit)}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-parchment rounded-lg px-4 py-3">
+            <p className="text-[17px] font-semibold text-ink">{fmt(livingBudget.amount)}円 / 月</p>
+          </div>
+        )}
+      </section>
 
       {/* ── 現金残高 ── */}
       <section className="mb-8">

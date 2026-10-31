@@ -20,6 +20,7 @@ import com.kakeibo.application.usecase.fixedexpense.CreateFixedExpenseUseCase;
 import com.kakeibo.application.usecase.fixedexpense.DeleteFixedExpenseCommand;
 import com.kakeibo.application.usecase.fixedexpense.DeleteFixedExpenseUseCase;
 import com.kakeibo.application.usecase.fixedexpense.FixedExpenseResult;
+import com.kakeibo.application.usecase.fixedexpense.FixedExpenseHistoryService;
 import com.kakeibo.application.usecase.fixedexpense.ListFixedExpensesQuery;
 import com.kakeibo.application.usecase.fixedexpense.ListFixedExpensesUseCase;
 import com.kakeibo.application.usecase.fixedexpense.UpdateFixedExpenseCommand;
@@ -37,17 +38,20 @@ public class FixedExpenseController {
     private final ListFixedExpensesUseCase listFixedExpensesUseCase;
     private final UpdateFixedExpenseUseCase updateFixedExpenseUseCase;
     private final DeleteFixedExpenseUseCase deleteFixedExpenseUseCase;
+    private final FixedExpenseHistoryService fixedExpenseHistoryService;
 
     public FixedExpenseController(
         CreateFixedExpenseUseCase createFixedExpenseUseCase,
         ListFixedExpensesUseCase listFixedExpensesUseCase,
         UpdateFixedExpenseUseCase updateFixedExpenseUseCase,
-        DeleteFixedExpenseUseCase deleteFixedExpenseUseCase
+        DeleteFixedExpenseUseCase deleteFixedExpenseUseCase,
+        FixedExpenseHistoryService fixedExpenseHistoryService
     ) {
         this.createFixedExpenseUseCase = createFixedExpenseUseCase;
         this.listFixedExpensesUseCase = listFixedExpensesUseCase;
         this.updateFixedExpenseUseCase = updateFixedExpenseUseCase;
         this.deleteFixedExpenseUseCase = deleteFixedExpenseUseCase;
+        this.fixedExpenseHistoryService = fixedExpenseHistoryService;
     }
 
     @PostMapping
@@ -55,6 +59,7 @@ public class FixedExpenseController {
         @Valid @RequestBody FixedExpenseRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
+        fixedExpenseHistoryService.listYear(userId, java.time.YearMonth.now(java.time.Clock.system(java.time.ZoneId.of("Asia/Tokyo"))).getYear());
         FixedExpenseResult result = createFixedExpenseUseCase.create(new CreateFixedExpenseCommand(
             request.title(),
             request.price(),
@@ -62,6 +67,7 @@ public class FixedExpenseController {
             request.memo(),
             userId
         ));
+        fixedExpenseHistoryService.recordCurrentTotal(userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(result));
     }
@@ -72,6 +78,7 @@ public class FixedExpenseController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "100") int perPage
     ) {
+        fixedExpenseHistoryService.listYear(userId, java.time.YearMonth.now(java.time.Clock.system(java.time.ZoneId.of("Asia/Tokyo"))).getYear());
         var result = listFixedExpensesUseCase.list(new ListFixedExpensesQuery(userId, page, perPage));
 
         return ResponseEntity.ok(new FixedExpenseListResponse(
@@ -83,12 +90,21 @@ public class FixedExpenseController {
         ));
     }
 
+    @GetMapping("/monthly-history")
+    public ResponseEntity<java.util.List<FixedExpenseHistoryService.MonthlyTotal>> history(
+        @RequestAttribute("authenticatedUserId") UUID userId,
+        @RequestParam int year
+    ) {
+        return ResponseEntity.ok(fixedExpenseHistoryService.listYear(userId, year));
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<FixedExpenseResponse> update(
         @PathVariable Long id,
         @Valid @RequestBody FixedExpenseRequest request,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
+        fixedExpenseHistoryService.listYear(userId, java.time.YearMonth.now(java.time.Clock.system(java.time.ZoneId.of("Asia/Tokyo"))).getYear());
         FixedExpenseResult result = updateFixedExpenseUseCase.update(new UpdateFixedExpenseCommand(
             id,
             request.title(),
@@ -97,6 +113,7 @@ public class FixedExpenseController {
             request.memo(),
             userId
         ));
+        fixedExpenseHistoryService.recordCurrentTotal(userId);
 
         return ResponseEntity.ok(toResponse(result));
     }
@@ -106,7 +123,9 @@ public class FixedExpenseController {
         @PathVariable Long id,
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
+        fixedExpenseHistoryService.listYear(userId, java.time.YearMonth.now(java.time.Clock.system(java.time.ZoneId.of("Asia/Tokyo"))).getYear());
         deleteFixedExpenseUseCase.delete(new DeleteFixedExpenseCommand(id, userId));
+        fixedExpenseHistoryService.recordCurrentTotal(userId);
         return ResponseEntity.noContent().build();
     }
 

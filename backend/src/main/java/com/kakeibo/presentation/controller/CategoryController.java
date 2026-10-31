@@ -50,11 +50,11 @@ public class CategoryController {
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         CategoryResult result = createCategoryUseCase.create(
-            new CreateCategoryCommand(request.name(), request.budgetAmount(), userId)
+            new CreateCategoryCommand(request.name(), request.budgetAmount(), request.groupType(), userId)
         );
 
         return ResponseEntity.status(HttpStatus.CREATED)
-            .body(new CategoryResponse(result.id(), result.name(), result.budgetAmount(), result.isSystem()));
+            .body(new CategoryResponse(result.id(), result.name(), result.budgetAmount(), result.isSystem(), result.groupType()));
     }
 
     @GetMapping
@@ -67,7 +67,7 @@ public class CategoryController {
 
         return ResponseEntity.ok(
             result.stream()
-                .map(item -> new CategoryResponse(item.id(), item.name(), item.budgetAmount(), item.isSystem()))
+                .map(item -> new CategoryResponse(item.id(), item.name(), item.budgetAmount(), item.isSystem(), item.groupType()))
                 .toList()
         );
     }
@@ -79,11 +79,11 @@ public class CategoryController {
         @RequestAttribute("authenticatedUserId") UUID userId
     ) {
         CategoryResult result = updateCategoryUseCase.update(
-            new UpdateCategoryCommand(id, request.name(), request.budgetAmount(), userId)
+            new UpdateCategoryCommand(id, request.name(), request.budgetAmount(), request.groupType(), userId)
         );
 
         return ResponseEntity.ok(
-            new CategoryResponse(result.id(), result.name(), result.budgetAmount(), result.isSystem())
+            new CategoryResponse(result.id(), result.name(), result.budgetAmount(), result.isSystem(), result.groupType())
         );
     }
 

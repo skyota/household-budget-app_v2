@@ -10,6 +10,15 @@ export async function listFixedExpenses(): Promise<ListResponse<FixedExpense>> {
   return res.json()
 }
 
+export async function listFixedExpenseHistory(year: number): Promise<{ year: number; month: number; total: number }[]> {
+  const res = await apiFetch(`/api/fixed-expenses/monthly-history?year=${year}`)
+  if (!res.ok) {
+    if (res.status === 401) dispatchUnauthorized()
+    throw new Error(await extractErrorMessage(res, '固定費履歴の取得に失敗しました'))
+  }
+  return res.json()
+}
+
 export async function createFixedExpense(data: {
   title: string
   price: number

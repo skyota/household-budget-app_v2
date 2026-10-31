@@ -4,5 +4,6 @@ public record CategoryResult(
     Long id,
     String name,
     long budgetAmount,
-    boolean isSystem
+    boolean isSystem,
+    String groupType
 ) {}

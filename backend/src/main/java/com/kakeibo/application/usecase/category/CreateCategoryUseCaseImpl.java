@@ -28,7 +28,8 @@ public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
             command.name(),
             new BudgetAmount(command.budgetAmount()),
             command.userId(),
-            false
+            false,
+            command.groupType()
         );
 
         Category saved = categoryRepository.save(category);
@@ -36,7 +37,8 @@ public class CreateCategoryUseCaseImpl implements CreateCategoryUseCase {
             saved.getId(),
             saved.getName(),
             saved.getBudgetAmount().value(),
-            saved.isSystem()
+            saved.isSystem(),
+            saved.getGroupType()
         );
     }
 }

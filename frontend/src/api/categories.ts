@@ -1,5 +1,5 @@
 import { apiFetch, extractErrorMessage, dispatchUnauthorized } from './client'
-import type { Category } from '../types'
+import type { Category, ExpenseGroup } from '../types'
 
 export async function listCategories(): Promise<Category[]> {
   const res = await apiFetch('/categories')
@@ -10,10 +10,10 @@ export async function listCategories(): Promise<Category[]> {
   return res.json()
 }
 
-export async function createCategory(name: string, budgetAmount: number): Promise<Category> {
+export async function createCategory(name: string, budgetAmount: number, groupType: ExpenseGroup): Promise<Category> {
   const res = await apiFetch('/categories', {
     method: 'POST',
-    body: JSON.stringify({ name, budgetAmount }),
+    body: JSON.stringify({ name, budgetAmount, groupType }),
   })
   if (!res.ok) {
     if (res.status === 401) dispatchUnauthorized()
@@ -22,10 +22,10 @@ export async function createCategory(name: string, budgetAmount: number): Promis
   return res.json()
 }
 
-export async function updateCategory(id: number, name: string, budgetAmount: number): Promise<Category> {
+export async function updateCategory(id: number, name: string, budgetAmount: number, groupType: ExpenseGroup): Promise<Category> {
   const res = await apiFetch(`/categories/${id}`, {
     method: 'PUT',
-    body: JSON.stringify({ name, budgetAmount }),
+    body: JSON.stringify({ name, budgetAmount, groupType }),
   })
   if (!res.ok) {
     if (res.status === 401) dispatchUnauthorized()

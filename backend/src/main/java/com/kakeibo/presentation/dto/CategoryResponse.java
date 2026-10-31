@@ -6,5 +6,6 @@ public record CategoryResponse(
     Long id,
     String name,
     long budgetAmount,
-    @JsonProperty("isSystem") boolean isSystem
+    @JsonProperty("isSystem") boolean isSystem,
+    String groupType
 ) {}

@@ -3,7 +3,16 @@ export interface Category {
   name: string
   budgetAmount: number
   isSystem: boolean
+  groupType: ExpenseGroup
 }
+
+export type ExpenseGroup = 'LIVING' | 'UTILITIES' | 'SPECIAL' | 'UNCATEGORIZED' | 'FIXED'
+export const EXPENSE_GROUPS: { value: ExpenseGroup; label: string }[] = [
+  { value: 'LIVING', label: '生活費' },
+  { value: 'UTILITIES', label: '光熱費' },
+  { value: 'SPECIAL', label: '特別費' },
+  { value: 'UNCATEGORIZED', label: '未分類' },
+]
 
 export interface ExpenseItem {
   id: number
@@ -51,6 +60,10 @@ export interface IncomeSetting {
 export interface InvestSetting {
   amount: number
   investDate: number
+}
+
+export interface LivingBudget {
+  amount: number
 }
 
 export type InvestType = 'INITIAL' | 'REGULAR' | 'SPOT'
