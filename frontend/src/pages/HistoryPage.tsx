@@ -1,12 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { listExpenses, createExpense, deleteExpense, updateExpense } from '../api/expenses'
 import { listCategories } from '../api/categories'
+import { listFixedExpenses, listFixedExpenseHistory } from '../api/fixedExpenses'
+import { listIncomeSettings } from '../api/incomeSettings'
+import { getInvestSetting } from '../api/investSettings'
+import { getLivingBudget } from '../api/livingBudget'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import MonthSelector from '../components/MonthSelector'
 import ExpenseEditModal from '../components/ExpenseEditModal'
-import CategoryGauge from '../components/CategoryGauge'
 import Toast from '../components/Toast'
 import { getCategoryColor } from '../utils/categoryColors'
 import type { Category, ExpenseItem } from '../types'
+
+type HistoryTab = 'monthly' | 'yearly'
+const OVERVIEW_COLORS = { LIVING: '#f59e0b', UTILITIES: '#0ea5e9', SPECIAL: '#8b5cf6', FIXED: '#64748b' }
 
 interface ToastConfig {
   message: string
@@ -40,6 +47,15 @@ export default function HistoryPage() {
   const monthRef = useRef(now.getMonth() + 1)
 
   const [categories, setCategories] = useState<Category[]>([])
+  const [tab, setTab] = useState<HistoryTab>('monthly')
+  const [annualYear, setAnnualYear] = useState(now.getFullYear())
+  const [annualExpenses, setAnnualExpenses] = useState<ExpenseItem[]>([])
+  const [fixedExpenseTotal, setFixedExpenseTotal] = useState(0)
+  const [monthlyIncomeTotal, setMonthlyIncomeTotal] = useState(0)
+  const [monthlyInvestAmount, setMonthlyInvestAmount] = useState(0)
+  const [livingBudget, setLivingBudget] = useState(65000)
+  const [annualFixedExpenseHistory, setAnnualFixedExpenseHistory] = useState<Record<number, number>>({})
+  const [monthlyFixedExpenseHistory, setMonthlyFixedExpenseHistory] = useState<Record<number, number>>({})
   const [chartExpenses, setChartExpenses] = useState<ExpenseItem[]>([])
   const [expenses, setExpenses] = useState<ExpenseItem[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -128,6 +144,10 @@ export default function HistoryPage() {
 
   useEffect(() => {
     listCategories().then(setCategories).catch(() => {})
+    listFixedExpenses().then((res) => setFixedExpenseTotal(res.data.reduce((sum, item) => sum + item.price, 0))).catch(() => {})
+    listIncomeSettings().then((res) => setMonthlyIncomeTotal(res.data.reduce((sum, item) => sum + item.amount, 0))).catch(() => {})
+    getInvestSetting().then((setting) => setMonthlyInvestAmount(setting.amount)).catch(() => setMonthlyInvestAmount(0))
+    getLivingBudget().then((budget) => setLivingBudget(budget.amount)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -148,10 +168,33 @@ export default function HistoryPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-    listExpenses(year, month, 1, 200)
+    listExpenses(year, month, 1, 1000)
       .then((res) => setChartExpenses(res.expenses))
       .catch(() => {})
   }, [year, month])
+
+  useEffect(() => {
+    Promise.all(Array.from({ length: 12 }, (_, index) => listExpenses(annualYear, index + 1, 1, 1000)))
+      .then((results) => setAnnualExpenses(results.flatMap((result) => result.expenses)))
+      .catch(() => setAnnualExpenses([]))
+    Promise.all([
+      listFixedExpenseHistory(annualYear),
+      listFixedExpenses(),
+    ]).then(([history, settings]) => {
+      const snapshotMap = Object.fromEntries(history.map((item) => [item.month, item.total]))
+      const currentTotal = settings.data.reduce((sum, item) => sum + item.price, 0)
+      if (annualYear === now.getFullYear()) {
+        for (let m = now.getMonth() + 1; m <= 12; m += 1) snapshotMap[m] = currentTotal
+      }
+      setAnnualFixedExpenseHistory(snapshotMap)
+    }).catch(() => setAnnualFixedExpenseHistory({}))
+  }, [annualYear])
+
+  useEffect(() => {
+    listFixedExpenseHistory(year)
+      .then((history) => setMonthlyFixedExpenseHistory(Object.fromEntries(history.map((item) => [item.month, item.total]))))
+      .catch(() => setMonthlyFixedExpenseHistory({}))
+  }, [year])
 
   async function loadMore() {
     // F-2: 月切り替え後に古い月のデータが混入しないよう、取得時点の年月をキャプチャして検証
@@ -171,20 +214,112 @@ export default function HistoryPage() {
     }
   }
 
-  function spentForCategory(categoryId: number): number {
-    return chartExpenses
-      .filter((e) => e.categoryId === categoryId)
-      .reduce((sum, e) => sum + e.price, 0)
-  }
-
   const categoryOrderedIds = categories.map((c) => c.id)
   const grouped = groupByDate(expenses)
   const sortedDates = Array.from(grouped.keys()).sort((a, b) => b.localeCompare(a))
   const totalAmount = expenses.reduce((sum, e) => sum + e.price, 0)
+  const visibleCategories = categories.filter((category) => !category.isSystem)
+  const selectedMonthIsPast = year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)
+  const selectedMonthFixedTotal = monthlyFixedExpenseHistory[month] ?? (selectedMonthIsPast ? 0 : fixedExpenseTotal)
+  const groupTotals = visibleCategories.map((category) => ({
+    id: category.id,
+    name: category.name,
+    value: chartExpenses.filter((expense) => expense.categoryId === category.id).reduce((sum, expense) => sum + expense.price, 0),
+    color: getCategoryColor(category.id, categoryOrderedIds) ?? '#94a3b8',
+  })).filter((item) => item.value > 0)
+  const livingTotal = visibleCategories.filter((category) => category.groupType === 'LIVING').reduce((sum, category) => sum + chartExpenses.filter((expense) => expense.categoryId === category.id).reduce((s, expense) => s + expense.price, 0), 0)
+  const livingPieData = [...groupTotals.filter((item) => visibleCategories.find((category) => category.id === item.id)?.groupType === 'LIVING')]
+  if (livingTotal < livingBudget) livingPieData.push({ id: -1, name: '残り予算', value: livingBudget - livingTotal, color: '#e5e7eb' })
+  const overviewData = [
+    { name: '生活費', value: visibleCategories.filter((category) => category.groupType === 'LIVING').reduce((sum, category) => sum + chartExpenses.filter((expense) => expense.categoryId === category.id).reduce((s, expense) => s + expense.price, 0), 0), color: OVERVIEW_COLORS.LIVING },
+    { name: '光熱費', value: visibleCategories.filter((category) => category.groupType === 'UTILITIES').reduce((sum, category) => sum + chartExpenses.filter((expense) => expense.categoryId === category.id).reduce((s, expense) => s + expense.price, 0), 0), color: OVERVIEW_COLORS.UTILITIES },
+    { name: '特別費', value: visibleCategories.filter((category) => category.groupType === 'SPECIAL').reduce((sum, category) => sum + chartExpenses.filter((expense) => expense.categoryId === category.id).reduce((s, expense) => s + expense.price, 0), 0), color: OVERVIEW_COLORS.SPECIAL },
+    { name: '固定費', value: selectedMonthFixedTotal, color: OVERVIEW_COLORS.FIXED },
+  ]
+  const spendableAmount = Math.max(0, monthlyIncomeTotal - monthlyInvestAmount)
+  const overviewSpent = overviewData.reduce((sum, item) => sum + item.value, 0)
+  const remainingAmount = Math.max(0, spendableAmount - overviewSpent)
+  const overviewPieData = [
+    ...overviewData,
+    ...(remainingAmount > 0 ? [{ name: '残り', value: remainingAmount, color: '#e5e7eb' }] : []),
+  ]
+  const annualData = Array.from({ length: 12 }, (_, index) => {
+    const m = index + 1
+    const monthExpenses = annualExpenses.filter((expense) => Number(expense.expenseDate.slice(5, 7)) === m)
+    const isPastMonth = annualYear < now.getFullYear() || (annualYear === now.getFullYear() && m < now.getMonth() + 1)
+    const totals: Record<string, string | number | null> = { month: `${m}月`, LIVING: 0, UTILITIES: 0, SPECIAL: 0, FIXED: annualFixedExpenseHistory[m] ?? (isPastMonth ? null : fixedExpenseTotal) }
+    for (const category of visibleCategories) {
+      const total = monthExpenses.filter((expense) => expense.categoryId === category.id).reduce((sum, expense) => sum + expense.price, 0)
+      if (category.groupType === 'LIVING') totals.LIVING = Number(totals.LIVING) + total
+      if (category.groupType === 'UTILITIES') totals.UTILITIES = Number(totals.UTILITIES) + total
+      if (category.groupType === 'SPECIAL') totals.SPECIAL = Number(totals.SPECIAL) + total
+    }
+    return totals
+  })
 
   return (
     <div className="px-5 py-4">
-      <MonthSelector year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m) }} />
+      {tab === 'monthly' && <MonthSelector year={year} month={month} onChange={(y, m) => { setYear(y); setMonth(m) }} />}
+
+      <div className="flex bg-parchment rounded-pill p-1 mt-4 mb-5">
+        {([['monthly', '支払い履歴'], ['yearly', '年間推移']] as [HistoryTab, string][]).map(([key, label]) => (
+          <button key={key} onClick={() => setTab(key)} className={`flex-1 h-9 rounded-pill text-[14px] ${tab === key ? 'bg-canvas text-ink font-semibold shadow-sm' : 'text-ink-muted'}`}>{label}</button>
+        ))}
+      </div>
+
+      {tab === 'monthly' && <div className="space-y-5 mb-6">
+        <section className="bg-canvas rounded-card border border-hairline p-4">
+          <h2 className="font-semibold text-[17px] text-ink">生活費の内訳</h2>
+          <p className="text-[13px] text-ink-muted">予算 ¥{livingBudget.toLocaleString()} に対する今月の利用額</p>
+          <div className="relative h-[270px]">
+            <ResponsiveContainer width="100%" height="100%"><PieChart>
+              <Pie data={livingPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={75} outerRadius={118} paddingAngle={0} startAngle={90} endAngle={-270}>
+                {livingPieData.map((item) => <Cell key={item.id} fill={item.color} />)}
+              </Pie><Tooltip formatter={(value: number) => `¥${value.toLocaleString()}`} />
+            </PieChart></ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-[12px] text-ink-muted">生活費</span>
+              <strong className="text-[21px] text-ink">¥{livingTotal.toLocaleString()}</strong>
+              <span className={`text-[12px] ${livingTotal > livingBudget ? 'text-red-500' : 'text-ink-muted'}`}>{livingTotal > livingBudget ? `予算超過 ¥${(livingTotal - livingBudget).toLocaleString()}` : `残り ¥${(livingBudget - livingTotal).toLocaleString()}`}</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+            {livingPieData.filter((item) => item.id !== -1).map((item) => <div key={item.id} className="flex items-center gap-2 text-[13px]"><span className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} /><span className="truncate flex-1">{item.name}</span><span>¥{item.value.toLocaleString()}</span></div>)}
+          </div>
+        </section>
+        <section className="bg-canvas rounded-card border border-hairline p-4">
+          <h2 className="font-semibold text-[17px] text-ink">今月の支出全体</h2>
+          <p className="text-[13px] text-ink-muted">投資後に使える予定額: ¥{spendableAmount.toLocaleString()}</p>
+          {selectedMonthIsPast && monthlyFixedExpenseHistory[month] === undefined && <p className="text-[12px] text-ink-muted">この月の固定費設定履歴はありません</p>}
+          <div className="relative h-[270px]">
+            <ResponsiveContainer width="100%" height="100%"><PieChart>
+              <Pie data={overviewPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={75} outerRadius={118} paddingAngle={0} startAngle={90} endAngle={-270}>
+                {overviewPieData.map((item) => <Cell key={item.name} fill={item.color} />)}
+              </Pie><Tooltip formatter={(value: number) => `¥${value.toLocaleString()}`} />
+            </PieChart></ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"><span className="text-[12px] text-ink-muted">支出合計</span><strong className="text-[21px] text-ink">¥{overviewSpent.toLocaleString()}</strong><span className={`text-[12px] ${overviewSpent > spendableAmount ? 'text-red-500' : 'text-ink-muted'}`}>{overviewSpent > spendableAmount ? `予定額超過 ¥${(overviewSpent - spendableAmount).toLocaleString()}` : `残り ¥${remainingAmount.toLocaleString()}`}</span></div>
+          </div>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2">{overviewPieData.map((item) => <div key={item.name} className="flex items-center gap-2 text-[13px]"><span className="w-2.5 h-2.5 rounded-full" style={{ background: item.color }} /><span className="flex-1">{item.name}</span><span>¥{item.value.toLocaleString()}</span></div>)}</div>
+        </section>
+      </div>}
+
+      {tab === 'yearly' && <section className="bg-canvas rounded-card border border-hairline p-4 mb-6">
+        <div className="flex justify-between items-center mb-4"><h2 className="font-semibold text-[17px] text-ink">年間支出</h2><select value={annualYear} onChange={(e) => setAnnualYear(Number(e.target.value))} className="border border-hairline rounded-lg bg-canvas px-3 py-2 text-[14px]">{Array.from({ length: 8 }, (_, i) => now.getFullYear() - 5 + i).map((y) => <option key={y} value={y}>{y}年</option>)}</select></div>
+        <div className="space-y-5">
+          {([
+            ['LIVING', '生活費', OVERVIEW_COLORS.LIVING],
+            ['UTILITIES', '光熱費', OVERVIEW_COLORS.UTILITIES],
+            ['SPECIAL', '特別費', OVERVIEW_COLORS.SPECIAL],
+            ['FIXED', '固定費', OVERVIEW_COLORS.FIXED],
+          ] as const).map(([key, label, color]) => (
+            <div key={key}>
+              <h3 className="text-[14px] font-semibold text-ink mb-1">{label}</h3>
+              <ResponsiveContainer width="100%" height={210}><BarChart data={annualData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 11 }} /><YAxis tickFormatter={(value) => `${Math.round(value / 10000)}万`} tick={{ fontSize: 11 }} width={38} /><Tooltip formatter={(value: number) => `¥${value.toLocaleString()}`} /><Bar dataKey={key} name={label} fill={color} /></BarChart></ResponsiveContainer>
+            </div>
+          ))}
+        </div>
+        <p className="text-[12px] text-ink-muted mt-2">月別履歴がない移行前の月は空欄です。設定額の変更は変更月から反映されます。</p>
+      </section>}
 
       {loading && (
         <div className="flex justify-center py-12">
@@ -192,35 +327,13 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {/* カテゴリ別予算ゲージ */}
-      {categories.filter((cat) => !cat.isSystem).length > 0 && (
-        <section className="mt-4 mb-10 bg-canvas rounded-card border border-hairline p-5">
-          <h2 className="font-display font-semibold text-[17px] tracking-tight text-ink mb-1">
-            {year}年{month}月の支出
-          </h2>
-          <p className="text-[14px] text-ink-muted mb-4">
-            合計: ¥{chartExpenses.reduce((s, e) => s + e.price, 0).toLocaleString()}
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {categories.filter((cat) => !cat.isSystem).map((cat, i) => (
-              <CategoryGauge
-                key={cat.id}
-                category={cat}
-                spent={spentForCategory(cat.id)}
-                colorIndex={i}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {!loading && expenses.length === 0 && (
+      {tab === 'monthly' && !loading && expenses.length === 0 && (
         <div className="text-center py-16">
           <p className="text-[17px] text-ink-muted">{year}年{month}月の支出はありません</p>
         </div>
       )}
 
-      {!loading && expenses.length > 0 && (
+      {tab === 'monthly' && !loading && expenses.length > 0 && (
         <>
           <div className="mb-4 flex justify-between items-center">
             {/* F-5: サーバー側の総件数を表示 */}

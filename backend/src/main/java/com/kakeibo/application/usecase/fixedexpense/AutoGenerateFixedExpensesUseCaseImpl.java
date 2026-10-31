@@ -92,7 +92,8 @@ public class AutoGenerateFixedExpensesUseCaseImpl implements AutoGenerateFixedEx
                             SYSTEM_CATEGORY_NAME,
                             new BudgetAmount(0),
                             userId,
-                            true);
+                            true,
+                            "FIXED");
                     return categoryRepository.save(newCategory);
                 });
     }

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { createCategory, updateCategory, deleteCategory } from '../api/categories'
 import type { Category } from '../types'
+import { EXPENSE_GROUPS } from '../types'
+import type { ExpenseGroup } from '../types'
 
 interface Props {
   categories: Category[]
@@ -11,6 +13,7 @@ interface Props {
 export default function CategoryModal({ categories, onClose, onUpdate }: Props) {
   const [name, setName] = useState('')
   const [budgetAmount, setBudgetAmount] = useState('')
+  const [groupType, setGroupType] = useState<ExpenseGroup>('UNCATEGORIZED')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -29,6 +32,7 @@ export default function CategoryModal({ categories, onClose, onUpdate }: Props) 
     setEditingId(cat.id)
     setName(cat.name)
     setBudgetAmount(String(cat.budgetAmount))
+    setGroupType(cat.groupType ?? 'UNCATEGORIZED')
     setError(null)
   }
 
@@ -36,6 +40,7 @@ export default function CategoryModal({ categories, onClose, onUpdate }: Props) 
     setEditingId(null)
     setName('')
     setBudgetAmount('')
+    setGroupType('UNCATEGORIZED')
     setError(null)
   }
 
@@ -54,10 +59,10 @@ export default function CategoryModal({ categories, onClose, onUpdate }: Props) 
     try {
       let updated: Category
       if (editingId !== null) {
-        updated = await updateCategory(editingId, name.trim(), budget)
+        updated = await updateCategory(editingId, name.trim(), budget, groupType)
         onUpdate(categories.map((c) => (c.id === editingId ? updated : c)))
       } else {
-        updated = await createCategory(name.trim(), budget)
+        updated = await createCategory(name.trim(), budget, groupType)
         onUpdate([...categories, updated])
       }
       cancelEdit()
@@ -119,6 +124,7 @@ export default function CategoryModal({ categories, onClose, onUpdate }: Props) 
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-[15px] text-ink font-sans truncate">{cat.name}</p>
+                      <p className="text-[12px] text-ink-muted">{EXPENSE_GROUPS.find((g) => g.value === (cat.groupType ?? 'UNCATEGORIZED'))?.label ?? '未分類'}</p>
                       {cat.budgetAmount > 0 && (
                         <p className="text-[12px] text-ink-muted">
                           予算: ¥{cat.budgetAmount.toLocaleString()}
@@ -172,6 +178,13 @@ export default function CategoryModal({ categories, onClose, onUpdate }: Props) 
             )}
 
             <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[12px] text-ink-muted">大分類</label>
+                <select value={groupType} onChange={(e) => setGroupType(e.target.value as ExpenseGroup)} className="h-11 px-4 rounded-pill border border-hairline bg-canvas text-[17px] text-ink outline-none focus:border-primary">
+                  {EXPENSE_GROUPS.map((group) => <option key={group.value} value={group.value}>{group.label}</option>)}
+                </select>
+              </div>
+
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] text-ink-muted">カテゴリー名 <span className="text-red-400">*</span></label>
                 <input
