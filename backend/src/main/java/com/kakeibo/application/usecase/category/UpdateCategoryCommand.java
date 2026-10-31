@@ -6,5 +6,6 @@ public record UpdateCategoryCommand(
     Long categoryId,
     String name,
     long budgetAmount,
+    String groupType,
     UUID userId
 ) {}

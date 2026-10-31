@@ -10,8 +10,9 @@ public class Category {
     private BudgetAmount budgetAmount;
     private final UUID userId;
     private final boolean isSystem;
+    private final String groupType;
 
-    public Category(Long id, String name, BudgetAmount budgetAmount, UUID userId, boolean isSystem) {
+    public Category(Long id, String name, BudgetAmount budgetAmount, UUID userId, boolean isSystem, String groupType) {
         if (name == null || name.isBlank()) {
             throw new DomainValidationException("カテゴリー名は必須です。");
         }
@@ -29,6 +30,7 @@ public class Category {
         this.budgetAmount = budgetAmount;
         this.userId = userId;
         this.isSystem = isSystem;
+        this.groupType = groupType == null || groupType.isBlank() ? "UNCATEGORIZED" : groupType;
     }
 
     public Long getId() {
@@ -50,4 +52,6 @@ public class Category {
     public boolean isSystem() {
         return isSystem;
     }
+
+    public String getGroupType() { return groupType; }
 }

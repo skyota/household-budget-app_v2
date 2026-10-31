@@ -5,5 +5,6 @@ import java.util.UUID;
 public record CreateCategoryCommand(
     String name,
     long budgetAmount,
+    String groupType,
     UUID userId
 ) {}

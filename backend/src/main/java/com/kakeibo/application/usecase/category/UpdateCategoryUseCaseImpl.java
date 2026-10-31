@@ -38,10 +38,11 @@ public class UpdateCategoryUseCaseImpl implements UpdateCategoryUseCase {
             command.name(),
             new BudgetAmount(command.budgetAmount()),
             category.getUserId(),
-            category.isSystem()
+            category.isSystem(),
+            command.groupType()
         );
 
         Category saved = categoryRepository.save(updated);
-        return new CategoryResult(saved.getId(), saved.getName(), saved.getBudgetAmount().value(), saved.isSystem());
+        return new CategoryResult(saved.getId(), saved.getName(), saved.getBudgetAmount().value(), saved.isSystem(), saved.getGroupType());
     }
 }
